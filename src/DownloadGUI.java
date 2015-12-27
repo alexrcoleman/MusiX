@@ -44,6 +44,8 @@ import youtube.YoutubeMP3;
 import youtube.YoutubeVideo;
 
 public class DownloadGUI extends JFrame {
+	public static final double VERSION = 1.01;
+	
 	public static final Color COLOR_BORDER = new Color(200, 200, 200);
 	private static final long serialVersionUID = -605159229467520421L;
 	public static YoutubeDownloader downloader = new YoutubeMP3();
@@ -233,7 +235,7 @@ public class DownloadGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public DownloadGUI() {
-		setTitle("MusiX");
+		setTitle("MusiX v" + VERSION);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 550, 347);
 		setMinimumSize(new Dimension(300, 400));
