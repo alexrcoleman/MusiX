@@ -57,9 +57,11 @@ public class DownloadGUI extends JFrame {
 	static List<ItemPanel> panelList = new ArrayList<ItemPanel>();
 	static {
 		/*
-		 * try { UIManager.installLookAndFeel("SeaGlass", "com.seaglasslookandfeel.SeaGlassLookAndFeel");
-		 * UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel"); } catch (Exception e) {
-		 * System.err.println("Seaglass LAF not available using Ocean.");
+		 * try { UIManager.installLookAndFeel("SeaGlass",
+		 * "com.seaglasslookandfeel.SeaGlassLookAndFeel");
+		 * UIManager.setLookAndFeel
+		 * ("com.seaglasslookandfeel.SeaGlassLookAndFeel"); } catch (Exception
+		 * e) { System.err.println("Seaglass LAF not available using Ocean.");
 		 */
 		try {
 			// UIManager.setLookAndFeel(new NimbusLookAndFeel());
@@ -89,14 +91,16 @@ public class DownloadGUI extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		Logger.getLogger("org.jaudiotagger.tag.datatype").setLevel(Level.SEVERE);
+		Logger.getLogger("org.jaudiotagger.tag.datatype")
+				.setLevel(Level.SEVERE);
 		instance = new DownloadGUI();
 		instance.setVisible(true);
 		instance.setStatus("Search for a song");
 		ActionListener searchAction = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String keywords = instance.searchPanel.searchTextField.getText();
+				String keywords = instance.searchPanel.searchTextField
+						.getText();
 				if (!keywords.trim().isEmpty()) {
 					LoadThread thread = new LoadThread(instance, keywords);
 					thread.start();
@@ -119,26 +123,23 @@ public class DownloadGUI extends JFrame {
 				return -Long.compare(o1.lastModified(), o2.lastModified());
 			}
 		});
-		int i = 0;
-		Calendar currentDay = null;
+		Calendar currentDay = Calendar.getInstance();
+		currentDay.setTime(new Date());
+		currentDay.set(Calendar.HOUR_OF_DAY, 0);
+		currentDay.set(Calendar.MINUTE, 0);
+		currentDay.set(Calendar.SECOND, 0);
+		currentDay.set(Calendar.MILLISECOND, 0);
 		SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, YYYY");
 		sdf.setTimeZone(Calendar.getInstance().getTimeZone());
-		for (File songFile : files) {
-			if (currentDay == null) {
-				currentDay = Calendar.getInstance();
-				currentDay.setTime(new Date(songFile.lastModified()));
-				currentDay.set(Calendar.HOUR_OF_DAY, 0);
-				currentDay.set(Calendar.MINUTE, 0);
-				currentDay.set(Calendar.SECOND, 0);
-				currentDay.set(Calendar.MILLISECOND, 0);
-			}
-			final SongInfo info = new SongInfo();
-			info.setTitle(songFile.getName().replace(".mp3", ""));
-			info.setArtist(songFile.getParentFile().getName());
-			final ItemPanel itemPanel = new ItemPanel(info.getTitle() + " by " + info.getArtist(), null);
-			itemPanel.setInfo(info);
-			instance.searchPanel.panelList.add(itemPanel);
-			if (songFile.lastModified() < currentDay.getTimeInMillis()) {// + (1000*60*60*24)) {
+
+		ItemPanel[] panels = new ItemPanel[files.size()];
+		for (int i = 0; i < files.size(); i++) {
+			File songFile = files.get(i);
+			// Add a row for this song's date if the old heading doesn't cover
+			// it
+			System.out.println(songFile + ": "
+					+ new Date(songFile.lastModified()));
+			if (songFile.lastModified() < currentDay.getTimeInMillis()) {
 				currentDay.setTime(new Date(songFile.lastModified()));
 				currentDay.set(Calendar.HOUR_OF_DAY, 0);
 				currentDay.set(Calendar.MINUTE, 0);
@@ -150,72 +151,80 @@ public class DownloadGUI extends JFrame {
 				JLabel label = new JLabel(formatted);
 				// tmp.setBackground(new Color(200,200,200));
 
-				Border border = BorderFactory.createMatteBorder(0, 0, 1, 0, DownloadGUI.COLOR_BORDER);
-				border = BorderFactory.createCompoundBorder(border, new EmptyBorder(5, 5, 5, 0));
+				Border border = BorderFactory.createMatteBorder(0, 0, 1, 0,
+						DownloadGUI.COLOR_BORDER);
+				border = BorderFactory.createCompoundBorder(border,
+						new EmptyBorder(5, 5, 5, 0));
 
 				tmp.setBorder(border);
 				label.setFont(new Font("Helvetica", Font.BOLD, 20));
 				label.setForeground(new Color(50, 50, 50));
 				tmp.add(label);
 				instance.searchPanel.panelList.add(tmp);
-
+				System.out.println("Adding label before " + songFile.getName());
 			}
-			itemPanel.id = i + 1;// panels.length - i;
+
+			// Add a row for this song
+			SongInfo info = new SongInfo();
+			info.setTitle(songFile.getName().replace(".mp3", ""));
+			info.setArtist(songFile.getParentFile().getName());
+			ItemPanel itemPanel = new ItemPanel(info.getTitle() + " by "
+					+ info.getArtist(), null);
+			itemPanel.setInfo(info);
+			itemPanel.id = i + 1;
 			itemPanel.updateColor();
-			DownloadGUI.panelList.add(0, itemPanel);
-			final int j = i;
-			Thread processThread = new Thread() {
-				public void run() {
-					// for (int i = fileArray.length - 1; i >= 0; i--) {
-					File songFile = files.get(j);
-					SongInfo info = new SongInfo();
-					MP3File audio;
-					try {
-						audio = new MP3File(songFile);
-					} catch (Exception e1) {
-						songFile.delete();
-						e1.printStackTrace();
-						return;
-					}
-					Tag tag = audio.getTagOrCreateAndSetDefault();
+			instance.searchPanel.panelList.add(itemPanel);
+			DownloadGUI.panelList.add(itemPanel);
+			panels[i] = itemPanel;
+		}
+		for (int i = 0; i < files.size(); i++) {
+			File songFile = files.get(i);
+			SongInfo info = new SongInfo();
+			MP3File audio;
+			try {
+				audio = new MP3File(songFile);
+			} catch (Exception e1) {
+				songFile.delete();
+				e1.printStackTrace();
+				return;
+			}
+			Tag tag = audio.getTagOrCreateAndSetDefault();
 
-					info.setAlbum(tag.getFirst(FieldKey.ALBUM));
-					if (tag.getArtworkList().size() > 0)
-						info.setAlbumArtwork(tag.getArtworkList().get(tag.getArtworkList().size() - 1).getBinaryData());
-					info.setArtist(tag.getFirst(FieldKey.ARTIST));
-					info.setLyrics(tag.getFirst(FieldKey.LYRICS));
-					String custom2 = tag.getFirst(FieldKey.CUSTOM2);
-					info.setPublic(songFile);
-					info.setTitle(tag.getFirst(FieldKey.TITLE));
+			info.setAlbum(tag.getFirst(FieldKey.ALBUM));
+			if (tag.getArtworkList().size() > 0)
+				info.setAlbumArtwork(tag.getArtworkList()
+						.get(tag.getArtworkList().size() - 1).getBinaryData());
+			info.setArtist(tag.getFirst(FieldKey.ARTIST));
+			info.setLyrics(tag.getFirst(FieldKey.LYRICS));
+			String custom2 = tag.getFirst(FieldKey.CUSTOM2);
+			info.setPublic(songFile);
+			info.setTitle(tag.getFirst(FieldKey.TITLE));
 
-					String track = tag.getFirst(FieldKey.TRACK);
-					String disc = tag.getFirst(FieldKey.DISC_NO);
-					String rating = tag.getFirst(FieldKey.RATING);
-					String year = tag.getFirst(FieldKey.YEAR);
-					if (custom2 != null && !custom2.isEmpty())
-						info.setYoutubeVideo(new YoutubeVideo(custom2, info.getArtist(), info.getTitle()));
-					if (info.getYoutubeVideo() != null)
-						info.setCache(new File(Analytics.getPrivateFolder(), "cache/" + info.getYoutubeVideo().getVideoId() + ".mp3"));
-					if (track != null && !track.isEmpty())
-						info.setTrackNumber(Integer.parseInt(track));
-					if (disc != null && !disc.isEmpty())
-						info.setDiscNumber(Integer.parseInt(disc));
-					if (rating != null && !rating.isEmpty())
-						info.setRating(Integer.parseInt(rating) / 255.0);
-					if (year != null && !year.isEmpty()) {
-						try {
-							info.setYear(Integer.parseInt(year));
-						} catch (NumberFormatException e) {
-
-						}
-					}
-					itemPanel.completeInfo(info);
+			String track = tag.getFirst(FieldKey.TRACK);
+			String disc = tag.getFirst(FieldKey.DISC_NO);
+			String rating = tag.getFirst(FieldKey.RATING);
+			String year = tag.getFirst(FieldKey.YEAR);
+			if (custom2 != null && !custom2.isEmpty())
+				info.setYoutubeVideo(new YoutubeVideo(custom2,
+						info.getArtist(), info.getTitle()));
+			if (info.getYoutubeVideo() != null)
+				info.setCache(new File(Analytics.getPrivateFolder(), "cache/"
+						+ info.getYoutubeVideo().getVideoId() + ".mp3"));
+			if (track != null && !track.isEmpty())
+				info.setTrackNumber(Integer.parseInt(track));
+			if (disc != null && !disc.isEmpty())
+				info.setDiscNumber(Integer.parseInt(disc));
+			if (rating != null && !rating.isEmpty())
+				info.setRating(Integer.parseInt(rating) / 255.0);
+			if (year != null && !year.isEmpty()) {
+				try {
+					info.setYear(Integer.parseInt(year));
+				} catch (NumberFormatException e) {
 
 				}
-			};
-			processThread.start();
-			i++;
-
+			}
+			ItemPanel itemPanel = panels[i];
+			itemPanel.completeInfo(info);
 		}
 
 	}
@@ -340,7 +349,8 @@ class LoadThread extends Thread {
 				if (maxBytes > 0) {
 					itemPanel.setProgress((int) (1000 * bytesRead / maxBytes));
 				}
-				itemPanel.setProgressText("Downloaded " + (bytesRead / 1000) + "KB / " + (maxBytes / 1000) + "KB");
+				itemPanel.setProgressText("Downloaded " + (bytesRead / 1000)
+						+ "KB / " + (maxBytes / 1000) + "KB");
 			}
 
 			@Override
@@ -364,9 +374,11 @@ class LoadThread extends Thread {
 			@Override
 			public void uploadProgressUpdate(long bytesRead) {
 				if (uploadMaxBytes > 0) {
-					itemPanel.setProgress((int) (1000 * bytesRead / uploadMaxBytes));
+					itemPanel
+							.setProgress((int) (1000 * bytesRead / uploadMaxBytes));
 				}
-				itemPanel.setProgressText("Uploaded " + (bytesRead / 1000) + "KB / " + (uploadMaxBytes / 1000) + "KB");
+				itemPanel.setProgressText("Uploaded " + (bytesRead / 1000)
+						+ "KB / " + (uploadMaxBytes / 1000) + "KB");
 			}
 
 			@Override
@@ -405,14 +417,17 @@ class LoadThread extends Thread {
 	}
 
 	public boolean doesSongExist(String title, String artist) {
-		for (Component c : DownloadGUI.instance.searchPanel.panelList.getComponents()) {
+		for (Component c : DownloadGUI.instance.searchPanel.panelList
+				.getComponents()) {
 			if (c instanceof ItemPanel) {
 				ItemPanel p = (ItemPanel) c;
 				SongInfo info = p.getInfo();
 				if (info == null)
 					continue;
-				// System.out.println("*"+info.getTitle() + " by " + info.getArtist());
-				if (info.getTitle().equalsIgnoreCase(title) && info.getArtist().equalsIgnoreCase(artist))
+				// System.out.println("*"+info.getTitle() + " by " +
+				// info.getArtist());
+				if (info.getTitle().equalsIgnoreCase(title)
+						&& info.getArtist().equalsIgnoreCase(artist))
 					return true;
 			}
 		}
@@ -426,38 +441,51 @@ class LoadThread extends Thread {
 			if (keywords.startsWith("spotify:")) {
 				String type = keywords.split(":")[1];
 				if (type.equals("album")) {
-					String callback = new String(client.readSite("http://ws.spotify.com/lookup/1/.json?extras=trackdetail&uri=" + keywords));
-					JSONObject json = new JSONObject(new JSONTokener(callback)).getJSONObject("album");
+					String callback = new String(
+							client.readSite("http://ws.spotify.com/lookup/1/.json?extras=trackdetail&uri="
+									+ keywords));
+					JSONObject json = new JSONObject(new JSONTokener(callback))
+							.getJSONObject("album");
 					final String albumName = json.getString("name");
 					final String artist = json.getString("artist");
-					final int year = Integer.parseInt(json.getString("released"));
+					final int year = Integer.parseInt(json
+							.getString("released"));
 					JSONArray tracks = json.getJSONArray("tracks");
 					HashMap<Integer, Integer> discToTrackMaxMap = new HashMap<Integer, Integer>();
 					int maxDisc = 1;
 					for (int i = 0; i < tracks.length(); i++) {
 						JSONObject track = tracks.getJSONObject(i);
-						if (!track.has("disc-number") || !track.has("track-number"))
+						if (!track.has("disc-number")
+								|| !track.has("track-number"))
 							continue;
-						final int discNumber = Integer.parseInt(track.getString("disc-number"));
+						final int discNumber = Integer.parseInt(track
+								.getString("disc-number"));
 						if (discNumber <= 0)
 							continue;
 						maxDisc = Math.max(discNumber, maxDisc);
-						final int trackNumber = Integer.parseInt(track.getString("track-number"));
+						final int trackNumber = Integer.parseInt(track
+								.getString("track-number"));
 						if (trackNumber <= 0)
 							continue;
 						Integer oldMax = discToTrackMaxMap.get(discNumber);
 						if (oldMax == null)
 							oldMax = 0;
-						discToTrackMaxMap.put(discNumber, Math.max(oldMax, trackNumber));
+						discToTrackMaxMap.put(discNumber,
+								Math.max(oldMax, trackNumber));
 					}
 					for (int i = 0; i < tracks.length(); i++) {
 						JSONObject track = tracks.getJSONObject(i);
 						final String trackName = track.getString("name");
-						if (!trackName.endsWith(" - Acoustic") && !doesSongExist(trackName, artist)) {
-							final double popularity = Double.parseDouble(track.getString("popularity"));
-							final int discNumber = Integer.parseInt(track.getString("disc-number"));
-							final int trackNumber = Integer.parseInt(track.getString("track-number"));
-							final int trackMax = discToTrackMaxMap.get(discNumber);
+						if (!trackName.endsWith(" - Acoustic")
+								&& !doesSongExist(trackName, artist)) {
+							final double popularity = Double.parseDouble(track
+									.getString("popularity"));
+							final int discNumber = Integer.parseInt(track
+									.getString("disc-number"));
+							final int trackNumber = Integer.parseInt(track
+									.getString("track-number"));
+							final int trackMax = discToTrackMaxMap
+									.get(discNumber);
 							final int discMax = maxDisc;
 							new Thread() {
 								public void run() {
@@ -471,7 +499,8 @@ class LoadThread extends Thread {
 									extraInfo.setDiscMax(discMax);
 									extraInfo.setTrackMax(trackMax);
 									extraInfo.setYear(year);
-									addTrackByKeywords(trackName + " by " + artist + " lyrics", extraInfo);
+									addTrackByKeywords(trackName + " by "
+											+ artist + " lyrics", extraInfo);
 								}
 							}.start();
 						}
@@ -490,9 +519,12 @@ class LoadThread extends Thread {
 			addTrackByKeywords(keywords);
 		} catch (Exception e) {
 			/*
-			 * Set<Thread> threadSet = Thread.getAllStackTraces().keySet(); Thread[] threadArray = threadSet.toArray(new
-			 * Thread[threadSet.size()]); for (Thread t : threadArray) { System.out.println(t.toString() + ":"); for
-			 * (StackTraceElement ste : t.getStackTrace()) { System.out.println("\t" + ste.toString()); } }
+			 * Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+			 * Thread[] threadArray = threadSet.toArray(new
+			 * Thread[threadSet.size()]); for (Thread t : threadArray) {
+			 * System.out.println(t.toString() + ":"); for (StackTraceElement
+			 * ste : t.getStackTrace()) { System.out.println("\t" +
+			 * ste.toString()); } }
 			 */
 			e.printStackTrace();
 		}
