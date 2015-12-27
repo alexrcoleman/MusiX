@@ -38,7 +38,6 @@ import org.json.JSONTokener;
 
 import com.coleman.utilities.http.Client;
 import com.coleman.utilities.http.DownloadProgressHandler;
-import com.echonest.api.v4.EchoNestAPI;
 
 import youtube.Youtube;
 import youtube.YoutubeDownloader;
@@ -49,7 +48,7 @@ public class DownloadGUI extends JFrame {
 	public static final Color COLOR_BORDER = new Color(200, 200, 200);
 	private static final long serialVersionUID = -605159229467520421L;
 	public static YoutubeDownloader downloader = new YoutubeMP3();
-	public static EchoNestAPI en = new EchoNestAPI("6P55ZC4OQHQI5HHNZ");
+	// public static EchoNestAPI en = new EchoNestAPI("6P55ZC4OQHQI5HHNZ");
 	public static DownloadGUI instance;
 
 	public JPanel contentPane;

@@ -6,11 +6,6 @@
 import com.coleman.utilities.http.Client;
 import com.coleman.utilities.http.ClientUtils;
 import com.coleman.utilities.http.DownloadProgressHandler;
-import com.echonest.api.v4.Artist;
-import com.echonest.api.v4.EchoNestAPI;
-import com.echonest.api.v4.EchoNestException;
-import com.echonest.api.v4.Song;
-import com.echonest.api.v4.Track;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -193,10 +188,6 @@ public class Analytics {
 				newFile.delete();
 			copyFile(cache, newFile);
 			return info;
-		} catch (EchoNestException e) {
-			if (dph != null)
-				dph.uploadFailed("EchoNest Error: " + e.getMessage());
-			e.printStackTrace();
 		} catch (IOException e) {
 			dph.uploadFailed("IO Error: " + e.getMessage());
 		} catch (Exception e) {
@@ -226,23 +217,8 @@ public class Analytics {
 		return s;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static void addArtist(Artist artist) throws EchoNestException {
-		/*
-		 * HashMap<String, List<String>> predictions = database.get("predictions", HashMap.class, new HashMap<String,
-		 * String>());
-		 * 
-		 * List<String> songStrings = new ArrayList<String>(); { List<Song> songs = artist.getSongs(0, 15); for (Song s :
-		 * songs) { songStrings .add(capitalize(s.getTitle().replaceAll("\\(.*?\\)", "").trim())); } } int i = 0;
-		 * List<String> toDelete = new ArrayList<String>(); for (String s : songStrings) { i++; if (toDelete.contains(s))
-		 * continue; for (int j = i; j < songStrings.size(); j++) { String sb = songStrings.get(j); if (sb.equals(s)) {
-		 * toDelete.add(sb); } } } for (String s : toDelete) { songStrings.remove(s); } predictions.put(artist.getName(),
-		 * songStrings); database.store("predictions", predictions);
-		 */
-		// System.out.println(predictions);
-	}
 
-	public static SongInfo process(DownloadProgressHandler dph, YoutubeVideo video, SongInfo basicInfo) throws EchoNestException, Exception {
+	public static SongInfo process(DownloadProgressHandler dph, YoutubeVideo video, SongInfo basicInfo) throws Exception {
 		//EchoNestAPI en = new EchoNestAPI("6P55ZC4OQHQI5HHNZ");
 		//en.setDPH(dph);
 		File file = basicInfo.getCache();
@@ -473,7 +449,7 @@ public class Analytics {
 		return info;
 	}
 
-	public static String addLyrics(Tag tag, Client httpClient, String title, String artist) throws KeyNotFoundException, FieldDataInvalidException, EchoNestException {
+	public static String addLyrics(Tag tag, Client httpClient, String title, String artist) throws KeyNotFoundException, FieldDataInvalidException {
 		String lyrics = null;
 		try {
 			if (tag.hasField(FieldKey.LYRICS))

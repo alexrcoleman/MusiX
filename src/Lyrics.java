@@ -5,15 +5,10 @@ import java.util.regex.Pattern;
 
 import com.coleman.utilities.http.Client;
 import com.coleman.utilities.http.ClientUtils;
-import com.echonest.api.v4.EchoNestException;
-import com.echonest.api.v4.Track;
 
 
 public class Lyrics {
 	public static Client c = new Client();
-	public static String search(Track track) throws EchoNestException {
-		return search(track.getTitle(), track.getArtistName());
-	}
 	private static HashMap<String,String> memo = new HashMap<>();
 	public static String search(String song, String artist) {
 		

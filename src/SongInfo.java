@@ -2,10 +2,6 @@ import java.io.File;
 
 import youtube.YoutubeVideo;
 
-import com.echonest.api.v4.Artist;
-import com.echonest.api.v4.EchoNestException;
-import com.echonest.api.v4.Track;
-
 public class SongInfo {
 	private byte[] bytes;
 	private String title;
@@ -13,13 +9,11 @@ public class SongInfo {
 	private String album;
 	private byte[] albumArtwork;
 	private String lyrics;
-	private Track track;
 	private YoutubeVideo youtubeVideo;
 	private File cache;
 	private File publicFile;
 	private String link;
 	private ItemPanel itemPanel;
-	private transient Artist artistData;
 	private double rating;
 	private int trackNumber;
 	private int discNumber;
@@ -28,22 +22,14 @@ public class SongInfo {
 	private int trackMax;
 	private String spotifyID;
 
-	public SongInfo(byte[] bytes, String title, String artist, String album, byte[] albumArtwork, String lyrics) {
+	public SongInfo(byte[] bytes, String title, String artist, String album,
+			byte[] albumArtwork, String lyrics) {
 		this.bytes = bytes;
 		this.title = title;
 		this.artist = artist;
 		this.album = album;
 		this.albumArtwork = albumArtwork;
 		this.lyrics = lyrics;
-	}
-
-	public SongInfo(Track track) {
-		this.track = track;
-		try {
-			this.title = track.getTitle();
-			this.artist = track.getArtistName();
-		} catch (EchoNestException e) {
-		}
 	}
 
 	public SongInfo() {
@@ -72,14 +58,6 @@ public class SongInfo {
 
 	public String getTitle() {
 		return title;
-	}
-
-	public Track getTrack() {
-		return track;
-	}
-
-	public void setTrack(Track track) {
-		this.track = track;
 	}
 
 	public void setAlbum(String album) {
@@ -136,14 +114,6 @@ public class SongInfo {
 
 	public String getLink() {
 		return link;
-	}
-
-	public void setArtistData(Artist artistData) {
-		this.artistData = artistData;
-	}
-
-	public Artist getArtistData() {
-		return artistData;
 	}
 
 	public ItemPanel getItemPanel() {
@@ -209,6 +179,7 @@ public class SongInfo {
 	public void setSpotifyID(String spotifyID) {
 		this.spotifyID = spotifyID;
 	}
+
 	@Override
 	public String toString() {
 		return "[title=" + title + ",art=" + artist + ",alb=" + album + "]";
