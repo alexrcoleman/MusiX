@@ -48,7 +48,7 @@ public class DownloadGUI extends JFrame {
 	/**
 	 * Current version of the program.
 	 */
-	public static final double VERSION = 1.01;
+	public static final double VERSION = 1.02;
 
 	/**
 	 * Color to use for borders
