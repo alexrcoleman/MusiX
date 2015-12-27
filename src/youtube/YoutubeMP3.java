@@ -1,8 +1,10 @@
 package youtube;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -11,7 +13,7 @@ import com.coleman.utilities.http.DownloadProgressHandler;
 public class YoutubeMP3 extends YoutubeDownloader {
 	private static final int __AM = 65521;
 
-	private int cc(String a) {
+	protected int cc(String a) {
 		int c = 1, b = 0, d, e;
 		for (e = 0; e < a.length(); e++) {
 			d = a.charAt(e);
@@ -78,7 +80,13 @@ public class YoutubeMP3 extends YoutubeDownloader {
 			if (status.equals("serving")) {
 				h = json.getString("h");
 				h2 = json.getString("h2");
-				r = URLEncoder.encode(json.getString("r"));
+				try {
+					r = URLEncoder.encode(json.getString("r"), "UTF-8");
+				} catch (UnsupportedEncodingException|JSONException e) {
+					e.printStackTrace();
+					dph.downloadFailed("Encoding failed... weird.");
+					return null;
+				}
 				ts_create = "" + json.getInt("ts_create");
 			} else
 				try {
@@ -89,7 +97,6 @@ public class YoutubeMP3 extends YoutubeDownloader {
 				}
 		}
 		// http://www.youtube-mp3.org/get?ab=128&video_id=AZrbW9UT1vE&h=49084a7a143ae3c5136f4e48ae410e9a&r=1386556301051.1457915441
-		long a = System.currentTimeMillis();
 		//String r = a + "." + cc(video.getVideoId() + a);
 		///get?video_id=' + video_id + '&h=-1&r=-1.1
 		String downloadLink = "/get?video_id=" + video.getVideoId() + "&ts_create=" + ts_create + "&r=" + r + "&h2=" + h2;
@@ -98,14 +105,9 @@ public class YoutubeMP3 extends YoutubeDownloader {
 		return downloadLink;
 	}
 
-	private static String U = "R3", m3 = "round", e3 = "B3", D3 = "v3", N3 = "I3", g3 = "V", K3 = "toLowerCase", n3 = "substr", z3 = "Z", d3 = "C", P3 = "O";
-	private static String[] x3 = new String[] { "a", "c", "e", "i", "h", "m", "l", "o", "n", "s", "t", "." };
-	private static int[] G3 = new int[] { 6, 7, 1, 0, 10, 3, 7, 8, 11, 4, 7, 9, 10, 8, 0, 5, 2 };
-	private static String[] M = new String[] { "a", "c", "b", "e", "d", "g", "m", "-", "s", "o", ".", "p", "3", "r", "u", "t", "v", "y", "n" };
-	private static int[][] X = new int[][] { { 17, 9, 14, 15, 14, 2, 3, 7, 6, 11, 12, 10, 9, 13, 5 }, { 11, 6, 4, 1, 9, 18, 16, 10, 0, 11, 11, 8, 11, 9, 15, 10, 1, 9, 6 } };
-
+	
 	protected static String gs(int[] I, String[] B) {
-		String P = "D", J = "";
+		String J = "";
 		for (int R = 0; R < I.length; R++) {
 			J += B[I[R]];
 		}

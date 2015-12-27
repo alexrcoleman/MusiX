@@ -643,7 +643,7 @@ public class ResultPanel extends JPanel {
 	public void setTrueBG(Color c) {
 		setTrueBG(this, c);
 	}
-	private void initializeAlbumArtwork() {
+	protected void initializeAlbumArtwork() {
 		BufferedImage bi = albumPanel.getImage();
 		if (bi != null) {
 			long r = 0, g = 0, b = 0, c = 0;

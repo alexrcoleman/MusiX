@@ -2,8 +2,8 @@ import javax.swing.*;
 import javax.swing.text.*;
 
 public class JTextWrapPane extends JTextPane {
-
-    boolean wrapState = true;
+	private static final long serialVersionUID = -3204357605055969466L;
+	boolean wrapState = true;
 
     public JTextWrapPane() {
         super();

@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 import com.coleman.utilities.http.Client;
 import com.coleman.utilities.http.ClientUtils;
 import com.coleman.utilities.http.DownloadProgressHandler;
@@ -12,10 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;

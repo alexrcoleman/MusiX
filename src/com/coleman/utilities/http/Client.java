@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class Client {
 	private String userAgent = null;
@@ -528,6 +526,7 @@ public class Client {
 						dph.progressUpdate(totalRead);
 						if (!dph.isAlive()) {
 							dph.downloadFailed("Terminated by user");
+							stream.close();
 							return;
 						}
 					}

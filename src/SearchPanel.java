@@ -3,12 +3,8 @@ import javax.swing.JTextField;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
-import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.Document;
-import javax.swing.text.PlainDocument;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -23,7 +19,6 @@ import java.awt.event.KeyEvent;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +43,6 @@ public class SearchPanel extends JPanel {
 		searchTextField = new JTextField();
 		searchTextField.setBounds(0, 0, 370, 28);
 		searchTextField.setBackground(new Color(255, 255, 255, 100));
-		final PlainDocument doc = (PlainDocument) searchTextField.getDocument();
 		searchTextField.getDocument().addDocumentListener(
 				new DocumentListener() {
 					public boolean IGNORE_NEXT = false;
