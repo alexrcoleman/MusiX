@@ -1,6 +1,5 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -44,50 +43,57 @@ import youtube.YoutubeMP3;
 import youtube.YoutubeVideo;
 
 public class DownloadGUI extends JFrame {
-	public static final double VERSION = 1.01;
-	
-	public static final Color COLOR_BORDER = new Color(200, 200, 200);
 	private static final long serialVersionUID = -605159229467520421L;
+
+	/**
+	 * Current version of the program.
+	 */
+	public static final double VERSION = 1.01;
+
+	/**
+	 * Color to use for borders
+	 */
+	public static final Color COLOR_BORDER = new Color(200, 200, 200);
+	/**
+	 * Color to use for backgrounds
+	 */
+	public static final Color COLOR_BACKGROUND = new Color(200, 200, 200);
+
+	/**
+	 * The downloader to use for downloading mp3 files. The default instance is
+	 * YoutubeMP3
+	 */
 	public static YoutubeDownloader downloader = new YoutubeMP3();
-	// public static EchoNestAPI en = new EchoNestAPI("6P55ZC4OQHQI5HHNZ");
+
+	/**
+	 * Instance of DownloadGUI which manages everything
+	 */
 	public static DownloadGUI instance;
 
-	public JPanel contentPane;
+	/**
+	 * The main page of the frame where you search and see your list of music
+	 */
 	public SearchPanel searchPanel;
-	public JPanel currentPanel;
-	public JLabel statusLabel;
-	static List<ItemPanel> panelList = new ArrayList<ItemPanel>();
-	static {
-		/*
-		 * try { UIManager.installLookAndFeel("SeaGlass",
-		 * "com.seaglasslookandfeel.SeaGlassLookAndFeel");
-		 * UIManager.setLookAndFeel
-		 * ("com.seaglasslookandfeel.SeaGlassLookAndFeel"); } catch (Exception
-		 * e) { System.err.println("Seaglass LAF not available using Ocean.");
-		 */
-		try {
-			// UIManager.setLookAndFeel(new NimbusLookAndFeel());
-		} catch (Exception e2) {
-			System.err.println("Unable to use Ocean LAF using default.");
-		}
-		// }
-	}
 
-	String getDayOfMonthSuffix(final int n) {
-		if (n >= 11 && n <= 13) {
-			return "th";
-		}
-		switch (n % 10) {
-		case 1:
-			return "st";
-		case 2:
-			return "nd";
-		case 3:
-			return "rd";
-		default:
-			return "th";
-		}
-	}
+	/**
+	 * The current panel active in the frame
+	 */
+	public JPanel currentPanel;
+
+	/**
+	 * Status label where you can set the status to show the user
+	 */
+	private JLabel statusLabel;
+
+	/**
+	 * The panel which will hold either the search panel or the result panel
+	 */
+	private JPanel contentPane;
+
+	/**
+	 * List of all the item panels in the scroll list
+	 */
+	protected static List<ItemPanel> panelList = new ArrayList<ItemPanel>();
 
 	/**
 	 * Launch the application.
@@ -228,7 +234,20 @@ public class DownloadGUI extends JFrame {
 			ItemPanel itemPanel = panels[i];
 			itemPanel.completeInfo(info);
 		}
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
 
+				synchronized(ResultPanel.TAG_LOCK) {
+					// wait for any tags to write
+				}
+				// write lyrics for any currently open panel
+				if(instance.currentPanel instanceof ResultPanel) {
+					ResultPanel rp = (ResultPanel)instance.currentPanel;
+					if(rp.listener != null)
+						rp.listener.updateLyrics();
+				}
+			}
+		});
 	}
 
 	/**
@@ -259,10 +278,19 @@ public class DownloadGUI extends JFrame {
 		contentPane.add(statusPanel, BorderLayout.SOUTH);
 	}
 
+	/**
+	 * Changes the status shown to the user at the bottom of the frame.
+	 * 
+	 * @param text
+	 *            The text to become the new status
+	 */
 	public void setStatus(String text) {
 		statusLabel.setText(" " + text);
 	}
 
+	/**
+	 * Changes the panel shown in the pane
+	 */
 	public void changePanel(JPanel newPanel) {
 		if (currentPanel instanceof ResultPanel) {
 			ResultPanel rp = (ResultPanel) currentPanel;
@@ -301,10 +329,22 @@ class LoadThread extends Thread {
 
 	private Client client = new Client();
 
+	/**
+	 * Adds a track given keywords to search
+	 * @param keywords Words to search for
+	 * @return information about the downloaded song
+	 */
 	private SongInfo addTrackByKeywords(String keywords) {
 		return addTrackByKeywords(keywords, null);
 	}
 
+	/**
+	 * Adds a track given keywords to search, and forces the result to have some
+	 * extra information (useful for things like adding from spotify where metadata is
+	 * known before the file is downloaded)
+	 * @param keywords Words to search for
+	 * @return information about the downloaded song
+	 */
 	private SongInfo addTrackByKeywords(String keywords, SongInfo extraInfo) {
 		YoutubeVideo video = Youtube.searchVideo(keywords);
 		final ItemPanel itemPanel = new ItemPanel(video.getVideoTitle(), this);
@@ -418,20 +458,19 @@ class LoadThread extends Thread {
 		return info;
 	}
 
+	/**
+	 * Checks if a song has already been downloaded
+	 */
 	public boolean doesSongExist(String title, String artist) {
-		for (Component c : DownloadGUI.instance.searchPanel.panelList
-				.getComponents()) {
-			if (c instanceof ItemPanel) {
-				ItemPanel p = (ItemPanel) c;
-				SongInfo info = p.getInfo();
-				if (info == null)
-					continue;
-				// System.out.println("*"+info.getTitle() + " by " +
-				// info.getArtist());
-				if (info.getTitle().equalsIgnoreCase(title)
-						&& info.getArtist().equalsIgnoreCase(artist))
-					return true;
-			}
+		for (ItemPanel panel : DownloadGUI.panelList) {
+			SongInfo info = panel.getInfo();
+			if (info == null)
+				continue;
+			// System.out.println("*"+info.getTitle() + " by " +
+			// info.getArtist());
+			if (info.getTitle().equalsIgnoreCase(title)
+					&& info.getArtist().equalsIgnoreCase(artist))
+				return true;
 		}
 		return false;
 	}
@@ -443,6 +482,7 @@ class LoadThread extends Thread {
 			if (keywords.startsWith("spotify:")) {
 				String type = keywords.split(":")[1];
 				if (type.equals("album")) {
+					// spotify:album:0G0vIGvVlJ3MtXunjqrbMY
 					String callback = new String(
 							client.readSite("http://ws.spotify.com/lookup/1/.json?extras=trackdetail&uri="
 									+ keywords));
@@ -509,25 +549,16 @@ class LoadThread extends Thread {
 					}
 					return;
 				} else if (type.equals("track")) {
+					// spotify:track:1ddcVV6fEuxTDjM6uASCz4
+					// TODO: Add support for a single track
 				} else {
 					gui.setStatus("Unknown spotify protocol '" + type + "'");
 				}
-				// spotify:album:0G0vIGvVlJ3MtXunjqrbMY
-				// spotify:track:1ddcVV6fEuxTDjM6uASCz4
 
-				//
 				return;
 			}
 			addTrackByKeywords(keywords);
 		} catch (Exception e) {
-			/*
-			 * Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-			 * Thread[] threadArray = threadSet.toArray(new
-			 * Thread[threadSet.size()]); for (Thread t : threadArray) {
-			 * System.out.println(t.toString() + ":"); for (StackTraceElement
-			 * ste : t.getStackTrace()) { System.out.println("\t" +
-			 * ste.toString()); } }
-			 */
 			e.printStackTrace();
 		}
 	}

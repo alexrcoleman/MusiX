@@ -8,8 +8,20 @@ import com.coleman.utilities.http.ClientUtils;
 
 
 public class Lyrics {
+	/**
+	 * Client used to download the lyrics
+	 */
 	public static Client c = new Client();
+	/**
+	 * Memoization table to cache lyrics
+	 */
 	private static HashMap<String,String> memo = new HashMap<>();
+	/**
+	 * Searches azlyrics for a given song
+	 * @param song Song title to search for
+	 * @param artist Artist name to search for
+	 * @return Lyrics if found, null otherwise
+	 */
 	public static String search(String song, String artist) {
 		
 		song = ClientUtils.encode(song);
@@ -56,15 +68,8 @@ public class Lyrics {
 		lyrics = lyrics.trim();
 		memo.put(url, lyrics);
 		return lyrics;
-		//System.out.println("LYRICS: " + callback);
-		//Pattern p = Pattern.compile("<Lyric>(.*?)</Lyric>", Pattern.DOTALL);
-		//Matcher m = p.matcher(callback);
-		//if(m.find()) {
-		//	return m.group(1).replace("���������", "'");
-		//}
-		//return null;
 	}
-	public static void main(String[] args) {
-		System.out.println(Lyrics.search("I am", "AWOLNATION"));
-	}
+	// public static void main(String[] args) {
+	// 	System.out.println(Lyrics.search("I am", "AWOLNATION"));
+	// }
 }

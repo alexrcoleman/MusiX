@@ -78,44 +78,58 @@ public class ResultPanel extends JPanel {
 	public static BufferedImage youtubeImg;
 	{
 		try {
-			iTunesPlusImg = ImageIO.read(ResultPanel.class.getResourceAsStream("/resources/iTunes_Plus.png"));
-			iTunesMinusImg = ImageIO.read(ResultPanel.class.getResourceAsStream("/resources/iTunes_Minus.png"));
-			clipboardImg = ImageIO.read(ResultPanel.class.getResourceAsStream("resources/clipboard.png"));
-			mp3Img = ImageIO.read(ResultPanel.class.getResourceAsStream("resources/Music Folder.png"));
-			youtubeImg = ImageIO.read(ResultPanel.class.getResourceAsStream("resources/YoutubeLogo.png"));
+			iTunesPlusImg = ImageIO.read(ResultPanel.class
+					.getResourceAsStream("/resources/iTunes_Plus.png"));
+			iTunesMinusImg = ImageIO.read(ResultPanel.class
+					.getResourceAsStream("/resources/iTunes_Minus.png"));
+			clipboardImg = ImageIO.read(ResultPanel.class
+					.getResourceAsStream("resources/clipboard.png"));
+			mp3Img = ImageIO.read(ResultPanel.class
+					.getResourceAsStream("resources/Music Folder.png"));
+			youtubeImg = ImageIO.read(ResultPanel.class
+					.getResourceAsStream("resources/YoutubeLogo.png"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	public static final Object TAG_LOCK = new Object();
 	private boolean escapeLast = false;
 
+	/**
+	 * Internal function called when the user finished editing the title
+	 * 
+	 * @param success
+	 *            whether or not they wanted to confirm their changes
+	 */
 	private void finishTitle(boolean success) {
 		if (success) {
 			if (escapeLast) {
 				escapeLast = false;
 				return;
 			}
-			songLabel.setText(songField.getText());
+			synchronized (TAG_LOCK) {
+				songLabel.setText(songField.getText());
 
-			MP3File audio;
-			Tag tag;
-			try {
-				if (info.getCache() != null) {
-					audio = new MP3File(info.getCache());
+				MP3File audio;
+				Tag tag;
+				try {
+					if (info.getCache() != null) {
+						audio = new MP3File(info.getCache());
+						tag = audio.getTagOrCreateAndSetDefault();
+						tag.setField(FieldKey.TITLE, songField.getText());
+						audio.commit();
+					}
+					audio = new MP3File(info.getPublic());
 					tag = audio.getTagOrCreateAndSetDefault();
 					tag.setField(FieldKey.TITLE, songField.getText());
 					audio.commit();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				audio = new MP3File(info.getPublic());
-				tag = audio.getTagOrCreateAndSetDefault();
-				tag.setField(FieldKey.TITLE, songField.getText());
-				audio.commit();
-			} catch (Exception e) {
-				e.printStackTrace();
+				info.setTitle(songField.getText());
+				itemPanel.completeInfo(info);
+				handleTransfer();
 			}
-			info.setTitle(songField.getText());
-			itemPanel.completeInfo(info);
-			handleTransfer();
 		} else {
 			songField.setText(songLabel.getText());
 			escapeLast = true;
@@ -123,35 +137,43 @@ public class ResultPanel extends JPanel {
 		titleLayout.show(titleHolder, "label");
 	}
 
+	/**
+	 * Internal function called when the user finished editing the artist
+	 * 
+	 * @param success
+	 *            whether or not they wanted to confirm their changes
+	 */
 	private void finishArtist(boolean success) {
 		if (success) {
 			if (escapeLast) {
 				escapeLast = false;
 				return;
 			}
-			artistLabel.setText(artistField.getText());
+			synchronized (TAG_LOCK) {
+				artistLabel.setText(artistField.getText());
 
-			MP3File audio;
-			Tag tag;
-			try {
-				if (info.getCache() != null && !info.getCache().exists())
-					return;
-				if (info.getCache() != null) {
-					audio = new MP3File(info.getCache());
+				MP3File audio;
+				Tag tag;
+				try {
+					if (info.getCache() != null && !info.getCache().exists())
+						return;
+					if (info.getCache() != null) {
+						audio = new MP3File(info.getCache());
+						tag = audio.getTagOrCreateAndSetDefault();
+						tag.setField(FieldKey.ARTIST, artistField.getText());
+						audio.commit();
+					}
+					audio = new MP3File(info.getPublic());
 					tag = audio.getTagOrCreateAndSetDefault();
 					tag.setField(FieldKey.ARTIST, artistField.getText());
 					audio.commit();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				audio = new MP3File(info.getPublic());
-				tag = audio.getTagOrCreateAndSetDefault();
-				tag.setField(FieldKey.ARTIST, artistField.getText());
-				audio.commit();
-			} catch (Exception e) {
-				e.printStackTrace();
+				info.setArtist(artistField.getText());
+				itemPanel.completeInfo(info);
+				handleTransfer();
 			}
-			info.setArtist(artistField.getText());
-			itemPanel.completeInfo(info);
-			handleTransfer();
 		} else {
 			artistField.setText(artistLabel.getText());
 			escapeLast = true;
@@ -159,9 +181,14 @@ public class ResultPanel extends JPanel {
 		artistLayout.show(artistHolder, "label");
 	}
 
+	/**
+	 * Internal function called after a rename to transfer the cache to a new
+	 * renamed file
+	 */
 	private void handleTransfer() {
 		info.getPublic().delete();
-		File newFile = new File(new File(Analytics.getPublicFolder(), info.getArtist()), info.getTitle() + ".mp3");
+		File newFile = new File(new File(Analytics.getPublicFolder(),
+				info.getArtist()), info.getTitle() + ".mp3");
 		info.setPublic(newFile);
 		newFile.getParentFile().mkdirs();
 		if (newFile.exists()) // TODO: Maybe make this optional
@@ -173,12 +200,13 @@ public class ResultPanel extends JPanel {
 		}
 	}
 
-	private LyricsChangeListener listener;
+	protected LyricsChangeListener listener;
 
 	private JPanel titleHolder;
 	private CardLayout titleLayout;
 	private JPanel artistHolder;
 	private CardLayout artistLayout;
+
 	/**
 	 * Create the panel.
 	 */
@@ -193,11 +221,11 @@ public class ResultPanel extends JPanel {
 				ResultPanel.this.requestFocus();
 			}
 		});
-		
-		
-		closePanel = new ImagePanel(ItemPanel.class.getResourceAsStream("resources/close.png"));
 
-		closePanel.setPreferredSize(new Dimension(22,22));
+		closePanel = new ImagePanel(
+				ItemPanel.class.getResourceAsStream("resources/close.png"));
+
+		closePanel.setPreferredSize(new Dimension(22, 22));
 		closePanel.makeButton();
 		closePanel.setToolTipText("Delete");
 		closePanel.addMouseListener(new MouseAdapter() {
@@ -207,28 +235,28 @@ public class ResultPanel extends JPanel {
 				Analytics.database.remove(info.getArtist());
 
 				boolean dec = false;
-				for(ItemPanel ip : DownloadGUI.panelList)  {
-					if(ip == itemPanel)
+				for (ItemPanel ip : DownloadGUI.panelList) {
+					if (ip == itemPanel)
 						dec = true;
-					if(dec)
+					if (dec)
 						ip.id--;
 					ip.updateColor();
 				}
 				itemPanel.getParent().remove(itemPanel);
 				DownloadGUI.panelList.remove(itemPanel);
-				DownloadGUI.instance.changePanel(DownloadGUI.instance.searchPanel);
+				DownloadGUI.instance
+						.changePanel(DownloadGUI.instance.searchPanel);
 				DownloadGUI.instance.repaint();
 			}
 		});
 		closePanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		
-		
+
 		// add(closePanel);
 
 		songLabel = new JLabel(info.getTitle());
 		songLabel.setFont(new Font("Helvetica", Font.BOLD, 20));
 		songLabel.setBounds(10, 40, 391, 16);
-		
+
 		songField = new JTextField(info.getTitle());
 		songField.setFont(new Font("Helvetica", Font.PLAIN, 13));
 		songField.setLocation(5, 32);
@@ -249,7 +277,7 @@ public class ResultPanel extends JPanel {
 			}
 
 			private void event(DocumentEvent e) {
-				//songField.setSize(songField.getPreferredSize());
+				// songField.setSize(songField.getPreferredSize());
 			}
 		});
 		songField.addKeyListener(new KeyAdapter() {
@@ -291,7 +319,7 @@ public class ResultPanel extends JPanel {
 		});
 		// add(songLabel);
 		// add(songField);
-		
+
 		artistLabel = new JLabel(info.getArtist());
 		artistLabel.setBounds(58, 60, 265, 16);
 		artistLabel.setFont(new Font("Helvetica", Font.PLAIN, 15));
@@ -315,7 +343,7 @@ public class ResultPanel extends JPanel {
 			}
 
 			private void event(DocumentEvent e) {
-				//artistField.setSize(artistField.getPreferredSize());
+				// artistField.setSize(artistField.getPreferredSize());
 			}
 		});
 		artistField.addKeyListener(new KeyAdapter() {
@@ -361,7 +389,7 @@ public class ResultPanel extends JPanel {
 		// add(scrollPane);
 
 		lyricsEditor = new JTextPane();
-		//lyricsEditor.setText("THIS IS A TEST.");
+		// lyricsEditor.setText("THIS IS A TEST.");
 		lyricsEditor.setText(info.getLyrics());
 		lyricsEditor.setFont(new Font("Courier", Font.PLAIN, 12));
 		listener = new LyricsChangeListener();
@@ -369,9 +397,11 @@ public class ResultPanel extends JPanel {
 		lyricsEditor.setCaretPosition(0);
 		listener.start();
 		scrollPane = new JScrollPane(lyricsEditor);
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		//scrollPane.setBounds(10, 88, 285, 206);
+		scrollPane
+				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane
+				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// scrollPane.setBounds(10, 88, 285, 206);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(5);
 
 		albumPanel = new ImagePanel();
@@ -383,47 +413,31 @@ public class ResultPanel extends JPanel {
 
 		albumLabel = new JLabel(info.getAlbum());
 		albumLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		albumLabel.setPreferredSize(new Dimension(150,28));
+		albumLabel.setPreferredSize(new Dimension(150, 28));
 		// add(albumLabel);
-		
+
 		backButton = new JButton("Back");
 		backButton.setBounds(0, 0, 67, 29);
 		backButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				DownloadGUI.instance.changePanel(DownloadGUI.instance.searchPanel);
+				DownloadGUI.instance
+						.changePanel(DownloadGUI.instance.searchPanel);
 			}
 		});
-		// add(backButton);
-
-		/*
-		 * try { final BufferedImage playImage = ImageIO.read(ResultPanel.class
-		 * .getResourceAsStream("resources/play-button.png")); final BufferedImage pauseImage =
-		 * ImageIO.read(ResultPanel.class .getResourceAsStream("resources/pause-button.png")); final BufferedImage stopImage
-		 * = ImageIO.read(ResultPanel.class .getResourceAsStream("resources/stop-button.png")); final ImagePanel playButton =
-		 * new ImagePanel(playImage); playButton.setBounds(392, 6, 32, 32); playButton.addMouseListener(new MouseAdapter() {
-		 * int mode = 0; Clip clip;
-		 * 
-		 * @Override public void mouseClicked(MouseEvent e) { if (mode == 0) try { System.out.println(ResultPanel.this.info
-		 * .getPublic()); AudioInputStream audioIn = AudioSystem .getAudioInputStream(new BufferedInputStream( new
-		 * FileInputStream( ResultPanel.this.info .getPublic()))); Clip clip = AudioSystem.getClip(); clip.open(audioIn);
-		 * clip.start(); mode = 1; playButton.setImage(pauseImage);
-		 * 
-		 * } catch (IOException e1) { e1.printStackTrace(); } catch (LineUnavailableException e1) { e1.printStackTrace(); }
-		 * catch (UnsupportedAudioFileException e1) { e1.printStackTrace(); } else if (mode == 1) { clip.stop(); mode = 2;
-		 * playButton.setImage(playImage); } else if (mode == 2) { clip.start(); mode = 1; playButton.setImage(pauseImage); }
-		 * } }); // add(playButton); } catch (IOException e2) { e2.printStackTrace(); }
-		 */
 
 		ImagePanel youtubeImage = new ImagePanel(youtubeImg);
-		youtubeImage.setPreferredSize(new Dimension(47,50));
+		youtubeImage.setPreferredSize(new Dimension(47, 50));
 		youtubeImage.setToolTipText("Open YouTube link");
 		youtubeImage.makeButton();
 		youtubeImage.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					Desktop.getDesktop().browse(new URI("https://www.youtube.com/watch?v=" + ResultPanel.this.info.getYoutubeVideo().getVideoId()));
+					Desktop.getDesktop().browse(
+							new URI("https://www.youtube.com/watch?v="
+									+ ResultPanel.this.info.getYoutubeVideo()
+											.getVideoId()));
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (URISyntaxException e1) {
@@ -432,20 +446,21 @@ public class ResultPanel extends JPanel {
 			}
 		});
 		youtubeImage.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		
 
 		ImagePanel mp3Image = new ImagePanel(mp3Img);
-		mp3Image.setPreferredSize(new Dimension(45,45));
+		mp3Image.setPreferredSize(new Dimension(45, 45));
 		mp3Image.makeButton();
 		mp3Image.setToolTipText("Open in file browser");
 		mp3Image.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					Desktop.getDesktop().open(ResultPanel.this.info.getPublic().getParentFile());
+					Desktop.getDesktop().open(
+							ResultPanel.this.info.getPublic().getParentFile());
 					if (Analytics.isWindows()) {
 						Runtime rt = Runtime.getRuntime();
-						rt.exec("explorer /select," + ResultPanel.this.info.getPublic());
+						rt.exec("explorer /select,"
+								+ ResultPanel.this.info.getPublic());
 					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -455,24 +470,23 @@ public class ResultPanel extends JPanel {
 		mp3Image.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		// add(mp3Image);
 
-		/*ImagePanel clipboardImage = new ImagePanel(clipboardImg);
-		clipboardImage.setBounds(375, 272, 22, 22);
-		clipboardImage.setToolTipText("Copy file to clipboard");
-		clipboardImage.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				File file = ResultPanel.this.info.getPublic();
-				ResultFileTransferable transfer = new ResultFileTransferable();
-				transfer.addFile(file);
-				transfer.setClipboard();
-			}
-		});
-		clipboardImage.setCursor(new Cursor(Cursor.HAND_CURSOR));*/
+		/*
+		 * ImagePanel clipboardImage = new ImagePanel(clipboardImg);
+		 * clipboardImage.setBounds(375, 272, 22, 22);
+		 * clipboardImage.setToolTipText("Copy file to clipboard");
+		 * clipboardImage.addMouseListener(new MouseAdapter() {
+		 * 
+		 * @Override public void mouseClicked(MouseEvent e) { File file =
+		 * ResultPanel.this.info.getPublic(); ResultFileTransferable transfer =
+		 * new ResultFileTransferable(); transfer.addFile(file);
+		 * transfer.setClipboard(); } }); clipboardImage.setCursor(new
+		 * Cursor(Cursor.HAND_CURSOR));
+		 */
 		// add(clipboardImage);
 
 		final ImagePanel iTunesImagePanel = new ImagePanel();
 		iTunesImagePanel.makeButton();
-		iTunesImagePanel.setPreferredSize(new Dimension(45,45));
+		iTunesImagePanel.setPreferredSize(new Dimension(45, 45));
 		if (iTunes.iTunesExists(info)) {
 			iTunesImagePanel.setToolTipText("Remove from iTunes");
 			iTunesImagePanel.setImage(iTunesMinusImg);
@@ -490,7 +504,10 @@ public class ResultPanel extends JPanel {
 					iTunesImagePanel.repaint();
 				} else {
 					try {
-						iTunes.addToiTunes(info);
+						listener.updateLyrics();
+						synchronized (TAG_LOCK) {
+							iTunes.addToiTunes(info);
+						}
 						iTunesImagePanel.setToolTipText("Remove from iTunes");
 						iTunesImagePanel.setImage(iTunesMinusImg);
 						iTunesImagePanel.repaint();
@@ -505,7 +522,7 @@ public class ResultPanel extends JPanel {
 
 		refreshButton = new JButton("Scrape Metadata");
 		refreshButton.setPreferredSize(new Dimension(87, 29));
-		
+
 		refreshButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -514,29 +531,33 @@ public class ResultPanel extends JPanel {
 				Tag tag;
 
 				String lyrics = Lyrics.search(info.getTitle(), info.getArtist());
-				if(lyrics == null)
+				if (lyrics == null)
 					lyrics = "";
 				System.out.println("Got lyrics: " + lyrics.length());
 				try {
 					info.setSpotifyID(null);
 					if (info.getCache() != null && info.getCache().exists()) {
-						
+
 						audio = new MP3File(info.getCache());
 						tag = audio.getTagOrCreateAndSetDefault();
-						Analytics.addSpotifyData(info.getTitle(), info.getArtist(), info, tag);
-						System.out.println("Cache found, album is " + info.getAlbum());
-						if(lyrics.isEmpty())
+						Analytics.addSpotifyData(info.getTitle(),
+								info.getArtist(), info, tag);
+						System.out.println("Cache found, album is "
+								+ info.getAlbum());
+						if (lyrics.isEmpty())
 							tag.deleteField(FieldKey.LYRICS);
 						else
 							tag.setField(FieldKey.LYRICS, lyrics);
 						audio.commit();
 					}
-					
+
 					audio = new MP3File(info.getPublic());
 					tag = audio.getTagOrCreateAndSetDefault();
-					Analytics.addSpotifyData(info.getTitle(), info.getArtist(), info, tag);
-					System.out.println("NO CACHE found, album is " + info.getAlbum());
-					if(lyrics.isEmpty())
+					Analytics.addSpotifyData(info.getTitle(), info.getArtist(),
+							info, tag);
+					System.out.println("NO CACHE found, album is "
+							+ info.getAlbum());
+					if (lyrics.isEmpty())
 						tag.deleteField(FieldKey.LYRICS);
 					else
 						tag.setField(FieldKey.LYRICS, lyrics);
@@ -553,22 +574,22 @@ public class ResultPanel extends JPanel {
 			}
 		});
 		// add(refreshButton);
-		
+
 		JPanel northPanel = new JPanel(new BorderLayout());
-		
+
 		JPanel northnorthPanel = new JPanel(new BorderLayout());
 		northnorthPanel.add(closePanel, BorderLayout.EAST);
 		northnorthPanel.add(backButton, BorderLayout.WEST);
-		
+
 		northPanel.add(northnorthPanel, BorderLayout.NORTH);
 		// northPanel.setBackground(new Color(0,0,255));
-		
+
 		JPanel eastPanel = new JPanel(new BorderLayout());
 		// eastPanel.setBackground(new Color(0,255,0));
-		
+
 		JPanel fullButtons = new JPanel();
 		fullButtons.setLayout(new BoxLayout(fullButtons, BoxLayout.Y_AXIS));
-		JPanel buttons = new JPanel(new GridLayout(1,3));
+		JPanel buttons = new JPanel(new GridLayout(1, 3));
 		buttons.add(iTunesImagePanel);
 		buttons.add(mp3Image);
 		if (ResultPanel.this.info.getYoutubeVideo() != null)
@@ -583,10 +604,11 @@ public class ResultPanel extends JPanel {
 		c.gridy = 0;
 		JPanel bufferAlbumArtwork = new JPanel(new BorderLayout());
 		bufferAlbumArtwork.add(albumPanel, BorderLayout.SOUTH);
-		bufferAlbumArtwork.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-		
+		bufferAlbumArtwork.setBorder(BorderFactory
+				.createEmptyBorder(3, 3, 3, 3));
+
 		albumHolder.add(bufferAlbumArtwork, c);
-		//albumHolder.add(Box.createVerticalGlue());
+		// albumHolder.add(Box.createVerticalGlue());
 		JPanel albumLabelHolder = new JPanel(new BorderLayout());
 		albumLabelHolder.add(albumLabel, BorderLayout.NORTH);
 		// albumLabelHolder.setBackground(new Color(255,0,0));
@@ -594,20 +616,20 @@ public class ResultPanel extends JPanel {
 		c.gridy = 1;
 		albumHolder.add(albumLabelHolder, c);
 		eastPanel.add(albumHolder, BorderLayout.CENTER);
-		
+
 		JPanel centerPanel = new JPanel(new BorderLayout());
 
-		JPanel bufferScrollPane = new JPanel(new GridLayout(1,1));
+		JPanel bufferScrollPane = new JPanel(new GridLayout(1, 1));
 		bufferScrollPane.add(scrollPane);
 		bufferScrollPane.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
-		
+
 		centerPanel.add(bufferScrollPane, BorderLayout.CENTER);
-		
+
 		// centerPanel.setBackground(new Color(255,0,0));
 
-		JPanel heading = new JPanel(new GridLayout(2,1));
+		JPanel heading = new JPanel(new GridLayout(2, 1));
 		heading.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-		
+
 		titleHolder = new JPanel();
 		titleHolder.setLayout(titleLayout = new CardLayout());
 		titleHolder.add(songLabel, "label");
@@ -616,40 +638,65 @@ public class ResultPanel extends JPanel {
 		artistHolder.setLayout(artistLayout = new CardLayout());
 		artistHolder.add(artistLabel, "label");
 		artistHolder.add(artistField, "field");
-		
+
 		heading.add(titleHolder);
 		heading.add(artistHolder);
-		
+
 		northPanel.add(heading, BorderLayout.CENTER);
-		
+
 		this.add(northPanel, BorderLayout.NORTH);
 		this.add(centerPanel, BorderLayout.CENTER);
 		this.add(eastPanel, BorderLayout.EAST);
-		
+
 		// initializeAlbumArtwork();
-		
+
 		// albumPanel.setImage(bi);
 	}
-	public void setTrueBG(Container container, Color c) {
-		for(Component comp : container.getComponents()) {
-			if(comp instanceof JTextField || comp instanceof JTextPane)
+
+	/**
+	 * Sets the background of a container by looping through children and
+	 * adjusting all of their background colors
+	 * 
+	 * @param container
+	 *            Container to adjust the color of
+	 * @param c
+	 *            Color to change background to
+	 */
+	public static void setTrueBG(Container container, Color c) {
+		container.setBackground(c);
+		for (Component comp : container.getComponents()) {
+			if (comp instanceof JTextField || comp instanceof JTextPane)
 				continue;
 			comp.setBackground(c);
-			if(comp instanceof Container) {
+			if (comp instanceof Container) {
 				setTrueBG((Container) comp, c);
 			}
 		}
 	}
+
+	/**
+	 * Sets the background of this component to a color by using
+	 * setTrueBG(Container, Color)
+	 * 
+	 * @param c
+	 *            Color to change the backgrounds to
+	 */
 	public void setTrueBG(Color c) {
 		setTrueBG(this, c);
 	}
+
+	/**
+	 * Sets background colors based on album artwork
+	 */
+	@Deprecated
 	protected void initializeAlbumArtwork() {
 		BufferedImage bi = albumPanel.getImage();
 		if (bi != null) {
 			long r = 0, g = 0, b = 0, c = 0;
 			for (int x = 0; x < bi.getWidth(); x++) {
 				for (int y = 0; y < bi.getHeight(); y++) {
-					if (x == 0 || y == 0 || x == bi.getWidth() || y == bi.getHeight()) {
+					if (x == 0 || y == 0 || x == bi.getWidth()
+							|| y == bi.getHeight()) {
 						Color color = new Color(bi.getRGB(x, y));
 						r += color.getRed();
 						g += color.getGreen();
@@ -668,36 +715,43 @@ public class ResultPanel extends JPanel {
 					Color color = new Color(bi.getRGB(x, y));
 					Color match = color;
 					for (Entry<Color, Integer> entry : colorMap.entrySet()) {
-						if (ResultPanel.getColorDistance(color, entry.getKey()) <= 15000 || ResultPanel.getColorDistance(color.brighter(), entry.getKey()) <= 15000) {
+						if (ResultPanel.getColorDistance(color, entry.getKey()) <= 15000
+								|| ResultPanel.getColorDistance(
+										color.brighter(), entry.getKey()) <= 15000) {
 							match = entry.getKey();
 							break;
 						}
 					}
-					colorMap.put(match, (colorMap.containsKey(match) ? colorMap.get(match) : 0) + 1);
+					colorMap.put(match,
+							(colorMap.containsKey(match) ? colorMap.get(match)
+									: 0) + 1);
 				}
 			}
-			List<Entry<Color, Integer>> list = new LinkedList<Entry<Color, Integer>>(colorMap.entrySet());
+			List<Entry<Color, Integer>> list = new LinkedList<Entry<Color, Integer>>(
+					colorMap.entrySet());
 			Collections.sort(list, new Comparator<Entry<Color, Integer>>() {
-				public int compare(Entry<Color, Integer> m1, Entry<Color, Integer> m2) {
+				public int compare(Entry<Color, Integer> m1,
+						Entry<Color, Integer> m2) {
 					return (m2.getValue()).compareTo(m1.getValue());
 				}
 			});
 			// System.out.println(list);
 			if (list.size() < 3) {
-				System.out.println("Forced into using border (lack of color scheme)");
+				System.out
+						.println("Forced into using border (lack of color scheme)");
 				System.out.println(list);
 				Color opposing = ResultPanel.getOpposingColor(border);
 				songLabel.setForeground(opposing);
 				artistLabel.setForeground(opposing);
 				albumLabel.setForeground(opposing);
 				this.setBackground(border);
-				for(Component comp : this.getComponents())
+				for (Component comp : this.getComponents())
 					comp.setBackground(border);
 			} else {
 				if (ResultPanel.getColorDistance(border, list.get(1).getKey()) <= 5000) {
 					System.out.println("Using avg");
 					this.setBackground(list.get(0).getKey());
-					for(Component comp : this.getComponents())
+					for (Component comp : this.getComponents())
 						comp.setBackground(list.get(0).getKey());
 				} else {
 					System.out.println("Using border");
@@ -707,12 +761,14 @@ public class ResultPanel extends JPanel {
 				songLabel.setForeground(list.get(1).getKey());
 				albumLabel.setForeground(list.get(1).getKey());
 
-				if (ResultPanel.getColorDistance(this.getBackground(), list.get(2).getKey()) > 5000) {
+				if (ResultPanel.getColorDistance(this.getBackground(), list
+						.get(2).getKey()) > 5000) {
 					System.out.println("Using avg");
 					artistLabel.setForeground(list.get(2).getKey());
 				} else {
 					System.out.println("Using complement");
-					artistLabel.setForeground(ResultPanel.getOpposingColor(this.getBackground()));
+					artistLabel.setForeground(ResultPanel.getOpposingColor(this
+							.getBackground()));
 				}
 			}
 			for (int x = 0; x < bi.getWidth(); x++) {
@@ -725,61 +781,156 @@ public class ResultPanel extends JPanel {
 					if (y > bi.getHeight() / 2.0)
 						borderY = bi.getHeight();
 					int alpha = 175;
-					if (Math.abs(borderX - x) <= 25 && Math.abs(borderX - x) < Math.abs(borderY - y))
+					if (Math.abs(borderX - x) <= 25
+							&& Math.abs(borderX - x) < Math.abs(borderY - y))
 						alpha = (int) (Math.abs(borderX - x) * 175 / 25.0);
 					else if (Math.abs(borderY - y) <= 25)
 						alpha = (int) (Math.abs(borderY - y) * 175 / 25.0);
 					alpha = Math.max(0, Math.min(255, alpha));
-					bi.setRGB(x, y, new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha).getRGB());
+					bi.setRGB(x, y, new Color(color.getRed(), color.getGreen(),
+							color.getBlue(), alpha).getRGB());
 				}
 			}
 		}
 	}
 
+	/**
+	 * Finds a contrasting color to this color for text to be drawn over or
+	 * under it
+	 * 
+	 * @param color
+	 *            Color to find contrast for
+	 * @return Color that contrats with color
+	 */
 	public static Color getContrastColor(Color color) {
-		return getContrastColor(color.getRed(), color.getGreen(), color.getBlue());
+		return getContrastColor(color.getRed(), color.getGreen(),
+				color.getBlue());
 	}
 
+	/**
+	 * Finds a contrasting color to this color for text to be drawn over or
+	 * under it
+	 * 
+	 * @param r
+	 *            Red component of color
+	 * @param g
+	 *            Green component of color
+	 * @param b
+	 *            Blue component of color
+	 * @return Contrasting Color to the given color
+	 */
 	public static Color getContrastColor(int r, int g, int b) {
 		int yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
 		return (yiq >= 128) ? Color.BLACK : Color.WHITE;
 	}
 
+	/**
+	 * Finds the inverse of a given color by subtracting each component from 255
+	 * 
+	 * @param r
+	 *            Red component of color
+	 * @param g
+	 *            Green component of color
+	 * @param b
+	 *            Blue component of color
+	 * @return Inverse color
+	 */
 	public static Color getInverseColor(int r, int g, int b) {
 		return new Color(255 - r, 255 - g, 255 - b);
 	}
 
+	/**
+	 * Finds an opposing color to a color by using contrasts if its a grayish
+	 * color, and otherwise using inverses
+	 * 
+	 * @param color
+	 *            Color to find oppose for
+	 * @return Opposing color that can be drawn on top of
+	 */
 	public static Color getOpposingColor(Color color) {
-		return getOpposingColor(color.getRed(), color.getGreen(), color.getBlue());
-	}
-
-	public static int getColorDistance(Color a, Color b) {
-		return (int) (Math.pow((a.getRed() - b.getRed()), 2) + Math.pow((a.getGreen() - b.getGreen()), 2) + Math.pow((a.getBlue() - b.getBlue()), 2));
+		return getOpposingColor(color.getRed(), color.getGreen(),
+				color.getBlue());
 	}
 
 	private static int C_THRESHOLD = 30;
-	private JButton refreshButton;
 
+	/**
+	 * Finds an opposing color to a color by using contrasts if its a grayish
+	 * color, and otherwise using inverses
+	 * 
+	 * @param r
+	 *            Red component of color
+	 * @param g
+	 *            Green component of color
+	 * @param b
+	 *            Blue component of color
+	 * @return Opposing color that can be drawn on top of
+	 */
 	public static Color getOpposingColor(int r, int g, int b) {
-		if (Math.abs(r - 127.5) < C_THRESHOLD && Math.abs(g - 127.5) < C_THRESHOLD && Math.abs(b - 127.5) < C_THRESHOLD)
+		if (Math.abs(r - 127.5) < C_THRESHOLD
+				&& Math.abs(g - 127.5) < C_THRESHOLD
+				&& Math.abs(b - 127.5) < C_THRESHOLD)
 			return getContrastColor(r, g, b);
 		return getInverseColor(r, g, b);
 	}
 
+	/**
+	 * Gets a distance for two colors to check how close they are to each other
+	 * 
+	 * @param a
+	 *            First color to compare
+	 * @param b
+	 *            Second color to compare
+	 * @return (Non-negative) distance between two colors
+	 */
+	public static int getColorDistance(Color a, Color b) {
+		return (int) (Math.pow((a.getRed() - b.getRed()), 2)
+				+ Math.pow((a.getGreen() - b.getGreen()), 2) + Math.pow(
+				(a.getBlue() - b.getBlue()), 2));
+	}
+
+	private JButton refreshButton;
+
+	/**
+	 * Gets a mix of two colors by averaging their components
+	 * 
+	 * @param a
+	 *            First color to mix
+	 * @param b
+	 *            Second color to mix
+	 * @return Mixed color
+	 */
 	public static Color getMixedColor(Color a, Color b) {
-		return new Color((a.getRed() + b.getRed()) / 2, (a.getGreen() + b.getGreen()) / 2, (a.getBlue() + b.getBlue()) / 2);
+		return new Color((a.getRed() + b.getRed()) / 2,
+				(a.getGreen() + b.getGreen()) / 2,
+				(a.getBlue() + b.getBlue()) / 2);
 	}
 
-	public void onForeground() {
+	/**
+	 * To be called internally when this panel is hidden
+	 */
+	protected void onForeground() {
 		listener.foreground = true;
+		lyricsEditor.getDocument().removeDocumentListener(listener);
+		listener.updateLyrics();
+		listener = null;
+		System.out.println("Foregrounded");
 	}
 
-	public void onResume() {
+	/**
+	 * To be called internally when this panel is put back in view
+	 */
+	protected void onResume() {
 		if (listener != null) {
 			listener.foreground = false;
 			if (!listener.isAlive())
 				listener.start();
+		} else {
+			listener = new LyricsChangeListener();
+			lyricsEditor.getDocument().addDocumentListener(listener);
+			listener.start();
 		}
+
 	}
 
 	class LyricsChangeListener extends Thread implements DocumentListener {
@@ -809,32 +960,39 @@ public class ResultPanel extends JPanel {
 		@Override
 		public void run() {
 			while (!foreground) {
-				if (lastChange != 0 && System.currentTimeMillis() > lastChange + 3000) {
+				if (lastChange != 0
+						&& System.currentTimeMillis() > lastChange + 3000) {
 					lastChange = 0;
-					System.out.println("Updating lyrics");
-					info.setLyrics(lyricsEditor.getText());
-
-					MP3File audio;
-					Tag tag;
-					try {
-						if (info.getCache() != null && info.getCache().exists()) {
-							audio = new MP3File(info.getCache());
-							tag = audio.getTagOrCreateAndSetDefault();
-							tag.setField(FieldKey.LYRICS, lyricsEditor.getText());
-							audio.commit();
-						}
-
-						audio = new MP3File(info.getPublic());
-						tag = audio.getTagOrCreateAndSetDefault();
-						tag.setField(FieldKey.LYRICS, lyricsEditor.getText());
-						audio.commit();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					updateLyrics();
 				}
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {
+				}
+			}
+		}
+
+		public void updateLyrics() {
+			System.out.println("Updating lyrics");
+			info.setLyrics(lyricsEditor.getText());
+
+			synchronized (TAG_LOCK) {
+				MP3File audio;
+				Tag tag;
+				try {
+					if (info.getCache() != null && info.getCache().exists()) {
+						audio = new MP3File(info.getCache());
+						tag = audio.getTagOrCreateAndSetDefault();
+						tag.setField(FieldKey.LYRICS, info.getLyrics());
+						audio.commit();
+					}
+
+					audio = new MP3File(info.getPublic());
+					tag = audio.getTagOrCreateAndSetDefault();
+					tag.setField(FieldKey.LYRICS, info.getLyrics());
+					audio.commit();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -869,17 +1027,21 @@ public class ResultPanel extends JPanel {
 
 		@Override
 		public DataFlavor[] getTransferDataFlavors() {
-			return new DataFlavor[] { DataFlavor.javaFileListFlavor, DataFlavor.stringFlavor };
+			return new DataFlavor[] { DataFlavor.javaFileListFlavor,
+					DataFlavor.stringFlavor };
 		}
 
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
-			return DataFlavor.javaFileListFlavor.equals(flavor) || DataFlavor.stringFlavor.equals(flavor);
+			return DataFlavor.javaFileListFlavor.equals(flavor)
+					|| DataFlavor.stringFlavor.equals(flavor);
 		}
 
 		@Override
-		public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-			System.out.println("Transfer flavor: " + flavor.getHumanPresentableName());
+		public Object getTransferData(DataFlavor flavor)
+				throws UnsupportedFlavorException, IOException {
+			System.out.println("Transfer flavor: "
+					+ flavor.getHumanPresentableName());
 			if (flavor.isFlavorJavaFileListType())
 				return files;
 			StringBuilder sb = new StringBuilder();
@@ -890,7 +1052,8 @@ public class ResultPanel extends JPanel {
 		}
 
 		public void setClipboard() {
-			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(this, null);
+			Toolkit.getDefaultToolkit().getSystemClipboard()
+					.setContents(this, null);
 		}
 	}
 }
