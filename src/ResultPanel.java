@@ -973,6 +973,8 @@ public class ResultPanel extends JPanel {
 		}
 
 		public void updateLyrics() {
+			if(lyricsEditor.getText().equals(info.getLyrics()))
+				return;
 			System.out.println("Updating lyrics");
 			info.setLyrics(lyricsEditor.getText());
 

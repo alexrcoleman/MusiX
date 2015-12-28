@@ -78,10 +78,11 @@ public class YoutubeVideo {
 	private static final String[] featureStrings = { "ft.", "featuring", "Featuring", "Feat.", "feat.", "feat" };
 	public static String parseTitle(String title) {
 		title = title.replaceAll("\\(.*?\\)", "");
+		title = title.replaceAll("\\[.*?\\]", "");
 		if(title.contains("-"))
 			title = title.split("-")[0] + " - " + title.split("-")[1];
 		if(title.contains("|"))
-			title = title.split("|")[0] + " - " + title.split("|")[1];
+			title = title.split("\\|")[0] + " - " + title.split("\\|")[1];
 		if(title.contains(":"))
 			title = title.split(":")[0] + " - " + title.split(":")[1];
 		int ftIndex = -1;
@@ -101,6 +102,7 @@ public class YoutubeVideo {
 		
 		while(title.contains("  "))
 			title = title.replace("  ", " ");
+		title = title.trim();
 		return title;
 	}
 
@@ -125,6 +127,9 @@ public class YoutubeVideo {
 	}
 
 	public String toString() {
+		if(songName == null) {
+			return videoTitle + " [" + videoUrl + "]";
+		}
 		return songName + " by " + songArtist + " [" + videoUrl + "]";
 	}
 }
