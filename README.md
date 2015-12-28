@@ -1,4 +1,4 @@
-MusiX v1.02
+MusiX v1.0.3
 ==============
 
 Your standard program for downloading legally bought music from video sites.
