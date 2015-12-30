@@ -48,7 +48,7 @@ public class DownloadGUI extends JFrame {
 	/**
 	 * Current version of the program.
 	 */
-	public static final String VERSION = "1.0.3";
+	public static final String VERSION = "1.0.4";
 
 	/**
 	 * Color to use for borders
@@ -155,7 +155,7 @@ public class DownloadGUI extends JFrame {
 				currentDay.set(Calendar.MILLISECOND, 0);
 
 				String formatted = sdf.format(currentDay.getTime());
-				JPanel tmp = new JPanel(new GridLayout(1, 1));
+				JPanel pan = new JPanel(new GridLayout(1, 1));
 				JLabel label = new JLabel(formatted);
 				// tmp.setBackground(new Color(200,200,200));
 
@@ -164,11 +164,11 @@ public class DownloadGUI extends JFrame {
 				border = BorderFactory.createCompoundBorder(border,
 						new EmptyBorder(5, 5, 5, 0));
 
-				tmp.setBorder(border);
+				pan.setBorder(border);
 				label.setFont(new Font("Helvetica", Font.BOLD, 20));
 				label.setForeground(new Color(50, 50, 50));
-				tmp.add(label);
-				instance.searchPanel.panelList.add(tmp);
+				pan.add(label);
+				instance.searchPanel.panelList.add(pan);
 				System.out.println("Adding label before " + songFile.getName());
 			}
 
