@@ -5,6 +5,7 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -33,9 +34,8 @@ public class SearchPanel extends JPanel {
 	public JButton searchButton;
 	public JScrollPane scrollPane;
 	public JPanel panelList;
-	
+
 	private SearchListener searchListener;
-	
 
 	/**
 	 * Create the panel.
@@ -49,35 +49,26 @@ public class SearchPanel extends JPanel {
 		searchListener = new SearchListener();
 		searchTextField.getDocument().addDocumentListener(searchListener);
 		searchTextField.addKeyListener(new KeyAdapter() {
-			// TODO Cache the search results OR just do a manual cache type thing OR both
+			// TODO Cache the search results OR just do a manual cache type
+			// thing OR both
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyChar() == '\t') {
-					if (searchTextField.getName() != null && !searchTextField
-									.getName().trim().isEmpty()) {
-						searchTextField.setText(searchTextField.getName());
+					e.consume();
+					String activeOption = searchListener.getActiveOption();
+					if (activeOption != null && !activeOption.trim().isEmpty()) {
+						searchTextField.setText(activeOption);
 					}
 					return;
 				}
-				System.out.println(e.getKeyCode());
 				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					searchListener.IGNORE_NEXT_DEL = true;
-					searchListener.IGNORE_NEXT = true;
-					searchTextField.setText(searchTextField.getText().substring(0,searchTextField.getSelectionStart()));
 					e.consume();
-					searchListener.searchIndex++;
-					searchListener.processEvent(null);
+					searchListener.nextOption();
 					return;
 				}
 				if (e.getKeyCode() == KeyEvent.VK_UP) {
-					searchListener.IGNORE_NEXT_DEL = true;
-					searchListener.IGNORE_NEXT = true;
-					searchTextField.setText(searchTextField.getText().substring(0,searchTextField.getSelectionStart()));
-					searchListener.searchIndex--;
-					if (searchListener.searchIndex < 0)
-						searchListener.searchIndex = 0;
-					searchListener.processEvent(null);
 					e.consume();
+					searchListener.previousOption();
 					return;
 				}
 			}
@@ -120,14 +111,16 @@ public class SearchPanel extends JPanel {
 	}
 
 	class SearchListener implements DocumentListener {
-		protected int searchIndex;
+		protected int searchIndex = 0;
 		public boolean IGNORE_NEXT = false;
 		public boolean IGNORE_NEXT_DEL = false;
 		private Object recentLock = null;
 		private Client client = new Client();
+		private ArrayList<String> options = new ArrayList<String>();
+		private String query;
 
 		public void changedUpdate(DocumentEvent e) {
-			// processEvent(e);
+
 		}
 
 		public void removeUpdate(DocumentEvent e) {
@@ -135,99 +128,163 @@ public class SearchPanel extends JPanel {
 				IGNORE_NEXT_DEL = false;
 				return;
 			}
-			// processEvent(e);
-			searchIndex = 0;
-			System.out.println("RESET B");
+			onUserChange();
+			synchronized (queryUseLock) {
+				searchIndex = 0;
+			}
 		}
 
 		public void insertUpdate(DocumentEvent e) {
-			processEvent(e);
-		}
-
-		public void processEvent(final DocumentEvent e) {
 			if (IGNORE_NEXT) {
 				IGNORE_NEXT = false;
 				return;
 			}
-			if(e != null) {
+			onUserChange();
+			processEvent(e);
+		}
+
+		private void onUserChange() {
+			synchronized (queryUseLock) {
 				searchIndex = 0;
-				System.out.println("RESET A");
+				options.clear();
+				query = null;
 			}
+		}
+
+		public void nextOption() {
+			synchronized (queryUseLock) {
+				if (searchIndex < options.size() - 1)
+					searchIndex++;
+			}
+			showOption();
+		}
+
+		public void previousOption() {
+			synchronized (queryUseLock) {
+				if (searchIndex > 0)
+					searchIndex--;
+			}
+			showOption();
+		}
+
+		public String getActiveOption() {
+			synchronized (queryUseLock) {
+				if (options.size() == 0 || query == null) {
+					return null;
+				}
+				return options.get(searchIndex);
+			}
+		}
+
+		public void showOption() {
+			synchronized (queryUseLock) {
+				String match = getActiveOption();
+				if (match == null)
+					return;
+
+				searchListener.IGNORE_NEXT_DEL = true;
+				searchListener.IGNORE_NEXT = true;
+				searchTextField.setText(match);
+				searchTextField.setSelectionStart(query.length());
+				searchTextField.setSelectionEnd(match.length());
+			}
+		}
+
+		private final Object queryUseLock = new Object();
+
+		private HashMap<String, String[]> cachedCompletion = new HashMap<>();
+		
+		public void processEvent(final DocumentEvent e) {
+			// If they make the change before the end, ignore it
 			if (e != null && e.getOffset() != e.getDocument().getLength() - 1) {
 				return;
 			}
+			synchronized (queryUseLock) {
+				searchIndex = 0;
+				options.clear();
+				query = null;
+			}
+			final Object thisLock = new Object();
+			recentLock = thisLock;
 			new Thread() {
 				public void run() {
-					Object thisLock = new Object();
-					recentLock = thisLock;
-
-					String query = searchTextField.getText();
-					if (query.trim().isEmpty()) {
-						// autocompleteTextField.setText("");
-						searchTextField.setName(null);
-						return;
-					}
-
 					String url;
-					try {
-						url = "http://suggestqueries.google.com/complete/search?hl=en&ds=yt&client=firefox&hjson=t&cp=1&alt=json&q="
-								+ URLEncoder.encode(query, "UTF-8");
-					} catch (UnsupportedEncodingException e) {
-						e.printStackTrace();
+					final String QUERY = searchTextField.getText();
+					SearchListener.this.query = QUERY;
+					if (QUERY.trim().isEmpty()) {
 						return;
 					}
-					// url =
-					// "https://clients1.google.com/complete/search?client=youtube&hl=en&gl=us&gs_rn=11&gs_ri=youtube&ds=yt&cp=1&gs_id=4&q="
-					// + searchTextField.getText();
-					String callback = new String(client.readSite(url));
-					callback = callback.substring(1, callback.length() - 1);
-					callback = "{" + callback + "}";
-					callback = callback.replaceFirst("\".*?\",", "\"values\":");
-					JSONObject object = new JSONObject(
-							new JSONTokener(callback));
-					JSONArray array = object.getJSONArray("values");
-					if (recentLock != thisLock)
-						return;
-					if (array.length() == 0) {
-						// autocompleteTextField.setText("");
+					
+					ArrayList<String> newOptions;
+					if (cachedCompletion.containsKey(QUERY)) {
+						newOptions = new ArrayList<>();
+						for (String s : cachedCompletion.get(QUERY))
+							newOptions.add(s);
 					} else {
-						searchIndex = Math.max(searchIndex, 0);
-						searchIndex = Math.min(searchIndex,array.length()-1);
-						System.out.println("Index " + searchIndex  + " ( size = " + array.length() + ")");
-						String match = array.getString(searchIndex);
-						//searchIndex = 0;
-						char[] matchArray = match.toCharArray();
-						char[] queryArray = query.toCharArray();
-						if (matchArray.length < queryArray.length) {
-							// autocompleteTextField.setText("");
-							searchTextField.setName("");
+
+						try {
+							url = "http://suggestqueries.google.com/complete/search?hl=en&ds=yt&client=firefox&hjson=t&cp=1&alt=json&q="
+									+ URLEncoder.encode(QUERY, "UTF-8");
+						} catch (UnsupportedEncodingException e) {
+							e.printStackTrace();
 							return;
 						}
-						int i = 0;
-						boolean isValid = true;
-						for (char queryChar : queryArray) {
-							char matchChar = matchArray[i];
-							if (Character.toLowerCase(matchChar) != Character
-									.toLowerCase(queryChar)) {
-								isValid = false;
-								break;
+						// url =
+						// "https://clients1.google.com/complete/search?client=youtube&hl=en&gl=us&gs_rn=11&gs_ri=youtube&ds=yt&cp=1&gs_id=4&q="
+						// + searchTextField.getText();
+						String callback = new String(client.readSite(url));
+						callback = callback.substring(1, callback.length() - 1);
+						callback = "{" + callback + "}";
+						callback = callback.replaceFirst("\".*?\",",
+								"\"values\":");
+						JSONObject object = new JSONObject(new JSONTokener(
+								callback));
+						JSONArray array = object.getJSONArray("values");
+						if (array.length() == 0) {
+							newOptions = new ArrayList<String>();
+						} else {
+							newOptions = new ArrayList<>(array.length());
+							char[] queryArray = QUERY.toCharArray();
+							for (int i = 0; i < array.length(); i++) {
+								String match = array.getString(i);
+
+								char[] matchArray = match.toCharArray();
+								if (matchArray.length < queryArray.length) {
+									continue;
+								}
+
+								int j = 0;
+								boolean isValid = true;
+								for (char queryChar : queryArray) {
+									char matchChar = matchArray[j];
+									if (Character.toLowerCase(matchChar) != Character
+											.toLowerCase(queryChar)) {
+										isValid = false;
+										break;
+									}
+									matchArray[j] = queryChar;
+									j++;
+								}
+								if (!isValid)
+									continue;
+								newOptions.add(new String(matchArray));
+								cachedCompletion.put(QUERY,
+										newOptions.toArray(new String[0]));
 							}
-							matchArray[i] = queryChar;
-							i++;
 						}
-						match = new String(matchArray);
-						if (recentLock != thisLock)
-							return;
-						if (isValid) {
-							// autocompleteTextField.setText(match);
-							IGNORE_NEXT = true;
-							IGNORE_NEXT_DEL = true;
-							searchTextField.setText(match);
-							searchTextField.setSelectionStart(query.length());
-							searchTextField.setSelectionEnd(match.length());
-						}
-						searchTextField.setName(match);
 					}
+
+					if (recentLock != thisLock) {
+						// System.out.println("Cancelled " + QUERY);
+						return;
+					}
+					synchronized (queryUseLock) {
+						options = newOptions;
+					}
+					// System.out.println("Completed " + QUERY);
+					// System.out.println("OPTIONS: " + options);
+					showOption();
+
 				}
 			}.start();
 		}
