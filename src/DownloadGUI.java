@@ -48,7 +48,7 @@ public class DownloadGUI extends JFrame {
 	/**
 	 * Current version of the program.
 	 */
-	public static final String VERSION = "1.0.4";
+	public static final String VERSION = "1.1.0";
 
 	/**
 	 * Color to use for borders
@@ -182,7 +182,9 @@ public class DownloadGUI extends JFrame {
 			itemPanel.id = i + 1;
 			itemPanel.updateColor();
 			instance.searchPanel.panelList.add(itemPanel);
-			DownloadGUI.panelList.add(itemPanel);
+			synchronized (DownloadGUI.panelList) {
+				DownloadGUI.panelList.add(itemPanel);
+			}
 			panels[i] = itemPanel;
 		}
 		for (int i = 0; i < files.size(); i++) {
@@ -209,7 +211,9 @@ public class DownloadGUI extends JFrame {
 			info.setTitle(tag.getFirst(FieldKey.TITLE));
 
 			String track = tag.getFirst(FieldKey.TRACK);
+			String track_max = tag.getFirst(FieldKey.TRACK_TOTAL);
 			String disc = tag.getFirst(FieldKey.DISC_NO);
+			String disc_max = tag.getFirst(FieldKey.DISC_TOTAL);
 			String rating = tag.getFirst(FieldKey.RATING);
 			String year = tag.getFirst(FieldKey.YEAR);
 			if (custom2 != null && !custom2.isEmpty())
@@ -220,8 +224,12 @@ public class DownloadGUI extends JFrame {
 						+ info.getYoutubeVideo().getVideoId() + ".mp3"));
 			if (track != null && !track.isEmpty())
 				info.setTrackNumber(Integer.parseInt(track));
+			if (track_max != null && !track_max.isEmpty())
+				info.setTrackMax(Integer.parseInt(track_max));
 			if (disc != null && !disc.isEmpty())
 				info.setDiscNumber(Integer.parseInt(disc));
+			if (disc_max != null && !disc_max.isEmpty())
+				info.setDiscMax(Integer.parseInt(disc_max));
 			if (rating != null && !rating.isEmpty())
 				info.setRating(Integer.parseInt(rating) / 255.0);
 			if (year != null && !year.isEmpty()) {
@@ -237,13 +245,13 @@ public class DownloadGUI extends JFrame {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 
-				synchronized(ResultPanel.TAG_LOCK) {
+				synchronized (ResultPanel.TAG_LOCK) {
 					// wait for any tags to write
 				}
 				// write lyrics for any currently open panel
-				if(instance.currentPanel instanceof ResultPanel) {
-					ResultPanel rp = (ResultPanel)instance.currentPanel;
-					if(rp.listener != null)
+				if (instance.currentPanel instanceof ResultPanel) {
+					ResultPanel rp = (ResultPanel) instance.currentPanel;
+					if (rp.listener != null)
 						rp.listener.updateLyrics();
 				}
 			}
@@ -331,7 +339,9 @@ class LoadThread extends Thread {
 
 	/**
 	 * Adds a track given keywords to search
-	 * @param keywords Words to search for
+	 * 
+	 * @param keywords
+	 *            Words to search for
 	 * @return information about the downloaded song
 	 */
 	private SongInfo addTrackByKeywords(String keywords) {
@@ -340,21 +350,26 @@ class LoadThread extends Thread {
 
 	/**
 	 * Adds a track given keywords to search, and forces the result to have some
-	 * extra information (useful for things like adding from spotify where metadata is
-	 * known before the file is downloaded)
-	 * @param keywords Words to search for
+	 * extra information (useful for things like adding from spotify where
+	 * metadata is known before the file is downloaded)
+	 * 
+	 * @param keywords
+	 *            Words to search for
 	 * @return information about the downloaded song
 	 */
 	private SongInfo addTrackByKeywords(String keywords, SongInfo extraInfo) {
 		YoutubeVideo video = Youtube.searchVideo(keywords);
 		final ItemPanel itemPanel = new ItemPanel(video.getVideoTitle(), this);
 		itemPanel.id = 1;
-		for (ItemPanel ip : DownloadGUI.panelList) {
-			ip.id++;
-			ip.updateColor();
+		synchronized (DownloadGUI.panelList) {
+			for (ItemPanel ip : DownloadGUI.panelList) {
+				ip.id++;
+				ip.updateColor();
+			}
+			DownloadGUI.panelList.add(0, itemPanel);
 		}
-		DownloadGUI.panelList.add(0, itemPanel);
 		searchPanel.panelList.add(itemPanel, 0);
+
 		itemPanel.setProgressIndeterminate(true);
 		itemPanel.setProgressMax(1000);
 		itemPanel.setProgressText("Retrieving info...");
@@ -373,14 +388,16 @@ class LoadThread extends Thread {
 			public void kill() {
 				super.kill();
 				boolean dec = false;
-				for (ItemPanel ip : DownloadGUI.panelList) {
-					if (ip == itemPanel)
-						dec = true;
-					if (dec)
-						ip.id--;
-					ip.updateColor();
+				synchronized (DownloadGUI.panelList) {
+					for (ItemPanel ip : DownloadGUI.panelList) {
+						if (ip == itemPanel)
+							dec = true;
+						if (dec)
+							ip.id--;
+						ip.updateColor();
+					}
+					DownloadGUI.panelList.remove(itemPanel);
 				}
-				DownloadGUI.panelList.remove(itemPanel);
 				itemPanel.getParent().remove(itemPanel);
 
 			}
@@ -462,15 +479,17 @@ class LoadThread extends Thread {
 	 * Checks if a song has already been downloaded
 	 */
 	public boolean doesSongExist(String title, String artist) {
-		for (ItemPanel panel : DownloadGUI.panelList) {
-			SongInfo info = panel.getInfo();
-			if (info == null)
-				continue;
-			// System.out.println("*"+info.getTitle() + " by " +
-			// info.getArtist());
-			if (info.getTitle().equalsIgnoreCase(title)
-					&& info.getArtist().equalsIgnoreCase(artist))
-				return true;
+		synchronized (DownloadGUI.panelList) {
+			for (ItemPanel panel : DownloadGUI.panelList) {
+				SongInfo info = panel.getInfo();
+				if (info == null)
+					continue;
+				// System.out.println("*"+info.getTitle() + " by " +
+				// info.getArtist());
+				if (info.getTitle().equalsIgnoreCase(title)
+						&& info.getArtist().equalsIgnoreCase(artist))
+					return true;
+			}
 		}
 		return false;
 	}
@@ -497,11 +516,10 @@ class LoadThread extends Thread {
 					int maxDisc = 1;
 					for (int i = 0; i < tracks.length(); i++) {
 						JSONObject track = tracks.getJSONObject(i);
-						if (!track.has("disc-number")
-								|| !track.has("track-number"))
+						if (!track.has("disc_number")
+								|| !track.has("track_number"))
 							continue;
-						final int discNumber = Integer.parseInt(track
-								.getString("disc-number"));
+						final int discNumber = track.getInt("disc_number");
 						if (discNumber <= 0)
 							continue;
 						maxDisc = Math.max(discNumber, maxDisc);
@@ -520,12 +538,8 @@ class LoadThread extends Thread {
 						final String trackName = track.getString("name");
 						if (!trackName.endsWith(" - Acoustic")
 								&& !doesSongExist(trackName, artist)) {
-							final double popularity = Double.parseDouble(track
-									.getString("popularity"));
-							final int discNumber = Integer.parseInt(track
-									.getString("disc-number"));
-							final int trackNumber = Integer.parseInt(track
-									.getString("track-number"));
+							final int discNumber = track.getInt("disc_number");
+							final int trackNumber = track.getInt("track_number");
 							final int trackMax = discToTrackMaxMap
 									.get(discNumber);
 							final int discMax = maxDisc;
@@ -535,7 +549,7 @@ class LoadThread extends Thread {
 									extraInfo.setTitle(trackName);
 									extraInfo.setArtist(artist);
 									extraInfo.setAlbum(albumName);
-									extraInfo.setRating(popularity);
+									extraInfo.setRating(1.0);
 									extraInfo.setDiscNumber(discNumber);
 									extraInfo.setTrackNumber(trackNumber);
 									extraInfo.setDiscMax(discMax);

@@ -7,6 +7,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.HashMap;
+
 import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;
@@ -312,7 +315,7 @@ public class Analytics {
 			}*/
 	}
 
-	public static boolean addSpotifyData(String title, String artist, SongInfo basicInfo, Tag tag) throws Exception {
+	public static boolean addSpotifyData(String title, String artist, SongInfo basicInfo, Tag tag, boolean inquire) throws Exception {
 		String search;
 		if(title.equals("Unknown Song")) {
 			search = basicInfo.getYoutubeVideo().getVideoTitle();
@@ -320,13 +323,12 @@ public class Analytics {
 			search = title + " " + artist;
 		}
 		search = search.replaceAll("\\[.*?\\]", "").trim().replace(" ", "%20").replace("'", "%27").replace("&", "%26");
-		byte[] bytes = client.readSite("http://ws.spotify.com/search/1/track.json?q=" + search);
+		byte[] bytes = client.readSite("https://api.spotify.com/v1/search?type=track&q=" + search);
 		boolean spotify = false;
 		// System.out.println("SpOtIfY||| " + track.getForeignID());
 		if (bytes != null) {
 			String callback = new String(bytes);
-			
-			JSONArray json = new JSONObject(new JSONTokener(callback)).getJSONArray("tracks");
+			JSONArray json = new JSONObject(new JSONTokener(callback)).getJSONObject("tracks").getJSONArray("items");
 			if (json.length() > 0) {
 				for (int i = 0; i < json.length(); i++) {
 					JSONObject obj = json.getJSONObject(i);
@@ -334,31 +336,42 @@ public class Analytics {
 					boolean passesSpotifyID = basicInfo.getSpotifyID() != null && basicInfo.getSpotifyID().equals(obj.getString("href"));
 					boolean isExactMatch = obj.getString("name").equals(title) && obj.getJSONArray("artists").getJSONObject(0).getString("name").equals(artist);
 					isExactMatch |= obj.getString("name").equals(artist) && obj.getJSONArray("artists").getJSONObject(0).getString("name").equals(title);
-					if(obj.getJSONObject("album").getString("name").toLowerCase().equals("greatest hits"))
+					if(obj.getJSONObject("album").getString("name").toLowerCase().contains("greatest hits"))
 						continue;
 					if ((hasSpotifyID && passesSpotifyID)
-							|| (!hasSpotifyID && (isExactMatch || (i < 3 && 0 == JOptionPane.showConfirmDialog(DownloadGUI.instance,
-									"\"" + obj.getString("name") + "\" by " + obj.getJSONArray("artists").getJSONObject(0).getString("name"), "Confirm spotify song match", JOptionPane.YES_NO_OPTION,
+							|| (!hasSpotifyID && (/*isExactMatch || */(inquire && i < 3 && 0 == JOptionPane.showConfirmDialog(DownloadGUI.instance,
+									"\"" + obj.getString("name") + "\" by " + obj.getJSONArray("artists").getJSONObject(0).getString("name") + " on \"" + obj.getJSONObject("album").getString("name") + "\"", "Confirm spotify song match", JOptionPane.YES_NO_OPTION,
 									JOptionPane.QUESTION_MESSAGE))))) {
-						String href = obj.getString("href");
-						if (href.equals("spotify:track:2M7A9GYWBiP1cRVfBSIUFZ")) {
-							System.err.println("FUCK YOU LIONS DEN");
-							continue;
+						
+						JSONObject albumData = new JSONObject(new JSONTokener(new String(client.readSite("https://api.spotify.com/v1/albums/" + obj.getJSONObject("album").getString("id")))));
+						JSONArray albumArr = albumData.getJSONObject("tracks").getJSONArray("items");
+						int maxDisc = obj.getInt("disc_number");
+						int maxTrack = obj.getInt("track_number");
+						for(int k=0;k<albumArr.length();k++) {
+							JSONObject track = albumArr.getJSONObject(k);
+							maxDisc = Math.max(maxDisc, track.getInt("disc_number"));
+							if(track.getInt("disc_number") == obj.getInt("disc_number"))
+								maxTrack = Math.max(maxTrack, track.getInt("track_number"));
 						}
+						
+						String href = obj.getString("href");
 						basicInfo.setTitle(obj.getString("name"));
 						basicInfo.setArtist(obj.getJSONArray("artists").getJSONObject(0).getString("name"));
 						
 						basicInfo.setSpotifyID(href);
-						System.out.println("SPOTIFY: " + href);
-						JSONObject oEmbed = new JSONObject(new JSONTokener(new String(client.readSite("https://embed.spotify.com/oembed/?url=" + href))));
+						System.out.println("Spotify href: " + href);
+						// JSONObject oEmbed = new JSONObject(new JSONTokener(new String(client.readSite("https://embed.spotify.com/oembed/?url=" + href))));
 						basicInfo.setAlbum(obj.getJSONObject("album").getString("name"));
-						byte[] imageBytes = client.readSite(oEmbed.getString("thumbnail_url").replace("/cover/", "/640/"));
+						byte[] imageBytes = client.readSite(obj.getJSONObject("album").getJSONArray("images").getJSONObject(0).getString("url"));
 						basicInfo.setAlbumArtwork(imageBytes);
-						basicInfo.setYear(Integer.parseInt(obj.getJSONObject("album").getString("released")));
-						basicInfo.setDiscNumber(1);
-						basicInfo.setTrackNumber(Integer.parseInt(obj.getString("track-number")));
-						basicInfo.setRating(Double.parseDouble(obj.getString("popularity")));
-
+						basicInfo.setYear(Integer.parseInt(albumData.getString("release_date").split("-")[0]));
+						basicInfo.setDiscNumber(obj.getInt("disc_number"));
+						basicInfo.setDiscMax(maxDisc);
+						basicInfo.setTrackNumber(obj.getInt("track_number"));
+						basicInfo.setTrackMax(maxTrack);
+						basicInfo.setRating(obj.getInt("popularity")/100.0);
+						System.out.println("Popularity: " + obj.getInt("popularity"));
+						
 						Artwork artwork = ArtworkFactory.getNew();
 						artwork.setBinaryData(imageBytes);
 						artwork.setMimeType(ImageFormats.getMimeTypeForBinarySignature(imageBytes));
@@ -376,9 +389,13 @@ public class Analytics {
 		if (spotify) {
 			if (basicInfo.getTrackNumber() > 0) {
 				tag.setField(FieldKey.TRACK, String.valueOf(basicInfo.getTrackNumber()));
+				tag.setField(FieldKey.TRACK_TOTAL, String.valueOf(basicInfo.getTrackMax()));
 				tag.setField(FieldKey.DISC_NO, String.valueOf(basicInfo.getDiscNumber()));
-				System.out.println("DISC/TRACK: " + basicInfo.getDiscNumber() + "/" + basicInfo.getTrackNumber());
+				tag.setField(FieldKey.DISC_TOTAL, String.valueOf(basicInfo.getDiscMax()));
+				System.out.println("DISC | TRACK: " + basicInfo.getDiscNumber() + "/" + basicInfo.getDiscMax() + " | " + basicInfo.getTrackNumber() + "/" + basicInfo.getTrackMax());
 			}
+			tag.setField(FieldKey.TITLE, basicInfo.getTitle());
+			tag.setField(FieldKey.ARTIST, basicInfo.getArtist());
 			tag.setField(FieldKey.ALBUM, String.valueOf(basicInfo.getAlbum()));
 			System.out.println("ALBUM: " + basicInfo.getAlbum());
 			tag.setField(FieldKey.RATING, String.valueOf((int) (basicInfo.getRating() * 255)));
@@ -395,7 +412,7 @@ public class Analytics {
 		
 		Tag tag = audio.getTagOrCreateAndSetDefault();
 
-		boolean spotify = addSpotifyData(title, artist, basicInfo, tag);
+		boolean spotify = addSpotifyData(title, artist, basicInfo, tag, true);
 		
 		title = basicInfo.getTitle();
 		artist = basicInfo.getArtist();

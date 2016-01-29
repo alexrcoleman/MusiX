@@ -190,7 +190,7 @@ public class ImagePanel extends JPanel implements ComponentListener {
 	private void resizeImage() {
 		if (image == null)
 			return;
-		this.scaled = toBufferedImage(image.getScaledInstance(this.getWidth() == 0 ? 1 : this.getWidth(), -1, Image.SCALE_AREA_AVERAGING));
+		this.scaled = toBufferedImage(image.getScaledInstance(this.getWidth() == 0 ? 1 : this.getWidth(), this.getWidth() == 0 ? 1 : -1, Image.SCALE_AREA_AVERAGING));
 		if (isButton) {
 			this.scaledPressed = new BufferedImage(scaled.getWidth(), scaled.getHeight(), BufferedImage.TYPE_INT_ARGB);
 			for (int x = 0; x < scaled.getWidth(); x++) {

@@ -31,16 +31,21 @@ public class iTunes {
 				.getAlbum().trim().isEmpty()) ? "Unknown Album" : info
 				.getAlbum().replace("/", "_"));
 		final File song;
-		if (info.getDiscNumber() <= 0)
-			song = new File(album, Analytics.validateFileName(info.getTitle())
-					+ ".mp3");
-		else
-			song = new File(album, Analytics.validateFileName(info
-					.getDiscNumber()
-					+ "-"
+		String filename;
+		System.out.println(info.getDiscNumber() + " / " +info.getDiscMax());
+		System.out.println(info.getTrackNumber() + " / " +info.getTrackMax());
+		if(info.getDiscMax() > 1) {
+			filename = info.getDiscNumber() + "-"
 					+ (info.getTrackNumber() < 10 ? "0" : "")
-					+ info.getTrackNumber() + " " + info.getTitle())
-					+ ".mp3");
+					+ info.getTrackNumber() + " " + info.getTitle();
+		} else if(info.getDiscMax() == 1) {
+			filename = (info.getTrackNumber() < 10 ? "0" : "")
+					+ info.getTrackNumber() + " " + info.getTitle();
+		} else {
+			filename = info.getTitle();
+		}
+		song = new File(album,Analytics.validateFileName(filename + ".mp3"));
+		System.out.println(info.getTitle() + " -> " + song.getAbsolutePath());
 
 		return song;
 	}

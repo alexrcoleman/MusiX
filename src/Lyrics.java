@@ -62,7 +62,7 @@ public class Lyrics {
 		lyrics = lyrics.replaceAll("<.*?>", "");
 		lyrics = lyrics.replace("’", "'");
 		lyrics = lyrics.replace("&quot;", "\"");
-		System.out.println(lyrics);
+		// System.out.println(lyrics);
 		
 		lyrics = lyrics.replace("���������", "'");
 		lyrics = lyrics.trim();

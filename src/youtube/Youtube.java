@@ -93,7 +93,7 @@ public class Youtube {
 					videos.add(videoIndex, video);
 					liveIndex++;
 					videoIndex++;
-				} else if (!search.toLowerCase().contains("live") && title.toLowerCase().contains("live")) {
+				} else if ((!search.toLowerCase().contains("live") && title.toLowerCase().contains("live")) || (!search.toLowerCase().contains("acoustic") && title.toLowerCase().contains("acoustic"))) {
 					videos.add(liveIndex, video);
 					liveIndex++;
 				} else {
@@ -102,6 +102,7 @@ public class Youtube {
 					liveIndex++;
 					videoIndex++;
 				}
+				System.out.println(videos);
 			}
 		} else {
 			Client c = new Client();

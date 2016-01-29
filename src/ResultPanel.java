@@ -530,42 +530,50 @@ public class ResultPanel extends JPanel {
 				MP3File audio;
 				Tag tag;
 
-				String lyrics = Lyrics.search(info.getTitle(), info.getArtist());
-				if (lyrics == null)
-					lyrics = "";
-				System.out.println("Got lyrics: " + lyrics.length());
+				String lyrics = "";
 				try {
 					info.setSpotifyID(null);
+
+
+					audio = new MP3File(info.getPublic());
+					tag = audio.getTagOrCreateAndSetDefault();
+					Analytics.addSpotifyData(info.getTitle(), info.getArtist(),
+							info, tag, true);
+
+					lyrics = Lyrics.search(info.getTitle(), info.getArtist());
+					if (lyrics == null)
+						lyrics = "";
+					System.out.println("Got lyrics: len=" + lyrics.length());
+					if (lyrics.isEmpty())
+						tag.deleteField(FieldKey.LYRICS);
+					else
+						tag.setField(FieldKey.LYRICS, lyrics);
+					audio.commit();
+					
+					
+
+					
+					
 					if (info.getCache() != null && info.getCache().exists()) {
 
 						audio = new MP3File(info.getCache());
 						tag = audio.getTagOrCreateAndSetDefault();
 						Analytics.addSpotifyData(info.getTitle(),
-								info.getArtist(), info, tag);
-						System.out.println("Cache found, album is "
-								+ info.getAlbum());
+								info.getArtist(), info, tag, false);
 						if (lyrics.isEmpty())
 							tag.deleteField(FieldKey.LYRICS);
 						else
 							tag.setField(FieldKey.LYRICS, lyrics);
 						audio.commit();
 					}
-
-					audio = new MP3File(info.getPublic());
-					tag = audio.getTagOrCreateAndSetDefault();
-					Analytics.addSpotifyData(info.getTitle(), info.getArtist(),
-							info, tag);
-					System.out.println("NO CACHE found, album is "
-							+ info.getAlbum());
-					if (lyrics.isEmpty())
-						tag.deleteField(FieldKey.LYRICS);
-					else
-						tag.setField(FieldKey.LYRICS, lyrics);
-					audio.commit();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				info.setLyrics(lyrics);
+				songLabel.setText(info.getTitle());
+				songField.setText(info.getTitle());
+				artistLabel.setText(info.getArtist());
+				artistField.setText(info.getArtist());
 				albumPanel.setImage(info.getAlbumArtwork());
 				albumLabel.setText(info.getAlbum());
 				lyricsEditor.setText(info.getLyrics());
