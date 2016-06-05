@@ -77,17 +77,15 @@ public class Analytics {
 		cacheFile.getParentFile().mkdirs();
 		if (audio == null)
 			audio = cacheFile;
-		final SongData song;
-		if (cacheFile.exists() && cacheFile.length() > 0) {
+		SongData song;
+		if (cacheFile.exists() && cacheFile.getTotalSpace() > 0) {
 			song = new SongData(dph, cacheFile);
-			if (!dph.isAlive()) {
+			if (dph.isCancelled())
 				return null;
-			}
 		} else {
 			song = new YoutubeMP3().downloadSong(dph, video);
-			if (!dph.isAlive()) {
+			if (dph.isCancelled())
 				return null;
-			}
 			if (song == null || song.getSongBytes() == null) {
 				System.err.println("Null song reference...");
 				return null;

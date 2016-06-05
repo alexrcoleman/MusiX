@@ -118,7 +118,9 @@ public class SearchPanel extends JPanel {
 		private Client client = new Client();
 		private ArrayList<String> options = new ArrayList<String>();
 		private String query;
-
+		public SearchListener() {
+			cachedCompletion.setMaxSize(100);
+		}
 		public void changedUpdate(DocumentEvent e) {
 
 		}
@@ -192,7 +194,7 @@ public class SearchPanel extends JPanel {
 
 		private final Object queryUseLock = new Object();
 
-		private HashMap<String, String[]> cachedCompletion = new HashMap<>();
+		private CacheMap<String, String[]> cachedCompletion = new CacheMap<>();
 		
 		public void processEvent(final DocumentEvent e) {
 			// If they make the change before the end, ignore it
@@ -242,6 +244,7 @@ public class SearchPanel extends JPanel {
 						JSONArray array = object.getJSONArray("values");
 						if (array.length() == 0) {
 							newOptions = new ArrayList<String>();
+							cachedCompletion.put(QUERY,new String[0]);
 						} else {
 							newOptions = new ArrayList<>(array.length());
 							char[] queryArray = QUERY.toCharArray();
@@ -268,9 +271,9 @@ public class SearchPanel extends JPanel {
 								if (!isValid)
 									continue;
 								newOptions.add(new String(matchArray));
-								cachedCompletion.put(QUERY,
-										newOptions.toArray(new String[0]));
 							}
+							cachedCompletion.put(QUERY,
+									newOptions.toArray(new String[0]));
 						}
 					}
 
@@ -289,32 +292,5 @@ public class SearchPanel extends JPanel {
 			}.start();
 		}
 
-	}
-}
-
-final class MyEntry<K, V> implements Map.Entry<K, V> {
-	private final K key;
-	private V value;
-
-	public MyEntry(K key, V value) {
-		this.key = key;
-		this.value = value;
-	}
-
-	@Override
-	public K getKey() {
-		return key;
-	}
-
-	@Override
-	public V getValue() {
-		return value;
-	}
-
-	@Override
-	public V setValue(V value) {
-		V old = this.value;
-		this.value = value;
-		return old;
 	}
 }

@@ -8,6 +8,9 @@ public abstract class DownloadProgressHandler {
 	public boolean isAlive() {
 		return !kill;
 	}
+	public boolean isCancelled() {
+		return kill;
+	}
 	public abstract void sizeDetermined(long maxBytes);
 	public abstract void progressUpdate(long bytesRead);
 	public abstract void downloadComplete(byte[] bytes);
