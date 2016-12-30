@@ -13,6 +13,7 @@ import java.util.HashMap;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
@@ -190,7 +191,11 @@ public class Analytics {
 			return info;
 		} catch (IOException e) {
 			dph.uploadFailed("IO Error: " + e.getMessage());
-		} catch (Exception e) {
+		} catch(InvalidAudioFrameException e) {
+			if (dph != null)
+				dph.uploadFailed("File downloaded was not MP3, still being converted");
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			if (dph != null)
 				dph.uploadFailed("Random Error: " + e.getLocalizedMessage());
