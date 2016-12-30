@@ -16,6 +16,7 @@ Also, the readme tells you the latest version number, so you can check and make 
 ### v1.2.0 ###
 * Switched to a new downloader since the old one seems to be down
 * Some other stuff that I can't remember
+
 ### v1.1.0 ###
 * Updated to use spotify's latest API (old is now deprecated and won't work)
 * Now adds disc number / track number counts more accurately
