@@ -1,4 +1,4 @@
-# MusiX v1.1.0 #
+# MusiX v1.2.0 #
 Your standard program for downloading legally bought music from video sites.
 
 ## Setup ##
@@ -13,6 +13,9 @@ Also, the readme tells you the latest version number, so you can check and make 
 * Make the list of tracks filter based on what is currently being typed in the search field
 * Autodetect available updates
 
+### v1.2.0 ###
+* Switched to a new downloader since the old one seems to be down
+* Some other stuff that I can't remember
 ### v1.1.0 ###
 * Updated to use spotify's latest API (old is now deprecated and won't work)
 * Now adds disc number / track number counts more accurately
