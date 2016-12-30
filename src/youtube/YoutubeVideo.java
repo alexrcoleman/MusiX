@@ -29,6 +29,9 @@ public class YoutubeVideo {
 		this.songName = songName;
 	}
 
+	static Pattern songMetaDataPattern = Pattern.compile(
+			"<li class=\"watch-meta-item \">.*?<h4 class=\"title\">.*?Music.*?</h4>.*?<ul class=\"content watch-info-tag-list\">.*?<li>\"(.*?)\" by (.*?) \\(<a href=", Pattern.DOTALL);
+	static Pattern videoTitlePattern = Pattern.compile("<span id=\"eow-title\" .*?>\n    (.*?)");
 	public YoutubeVideo(String videoUrl) {
 		this.videoUrl = videoUrl;
 		this.videoId = videoUrl.substring(videoUrl.indexOf("?v=") + 3);
@@ -36,17 +39,10 @@ public class YoutubeVideo {
 		Client c = new Client();
 		c.setUserAgent("Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0");
 		String html = new String(c.readSite(videoUrl));
-		System.out.println(videoUrl);
-		System.out.println("HTML: " + html);
-		Pattern songMetaDataPattern = Pattern.compile(
-				"<li class=\"watch-meta-item \">.*?<h4 class=\"title\">.*?Music.*?</h4>.*?<ul class=\"content watch-info-tag-list\">.*?<li>\"(.*?)\" by (.*?) \\(<a href=", Pattern.DOTALL);
-		Pattern videoTitlePattern = Pattern.compile("<span id=\"eow-title\" class=\".*?\" dir=\"ltr\">\n    (.*?)");
+//		System.out.println(videoUrl);
+//		System.out.println("HTML: " + html);
 		Matcher songMetaDataMatcher = songMetaDataPattern.matcher(html);
 		Matcher videoTitleMatcher = videoTitlePattern.matcher(html);
-		/*
-		 * if (!songMetaDataPattern.find()) { //return; throw new IllegalArgumentException("Video URL " + videoUrl +
-		 * "is not a song; no name found"); }
-		 */
 		if (songMetaDataMatcher.find()) {
 			System.out.println("FOUND METADATA: " + true);
 			this.songName = songMetaDataMatcher.group(1).replace("&#39;", "'").replace("Karaoke", "").replace(" - ", "").replace("Live", "").replace("()", "").trim();

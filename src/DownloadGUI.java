@@ -39,6 +39,7 @@ import com.coleman.utilities.http.DownloadProgressHandler;
 
 import youtube.Youtube;
 import youtube.YoutubeDownloader;
+import youtube.YoutubeInMP3;
 import youtube.YoutubeMP3;
 import youtube.YoutubeVideo;
 
@@ -58,12 +59,6 @@ public class DownloadGUI extends JFrame {
 	 * Color to use for backgrounds
 	 */
 	public static final Color COLOR_BACKGROUND = new Color(200, 200, 200);
-
-	/**
-	 * The downloader to use for downloading mp3 files. The default instance is
-	 * YoutubeMP3
-	 */
-	public static YoutubeDownloader downloader = new YoutubeMP3();
 
 	/**
 	 * Instance of DownloadGUI which manages everything
@@ -145,8 +140,6 @@ public class DownloadGUI extends JFrame {
 			File songFile = files.get(i);
 			// Add a row for this song's date if the old heading doesn't cover
 			// it
-			System.out.println(songFile + ": "
-					+ new Date(songFile.lastModified()));
 			if (songFile.lastModified() < currentDay.getTimeInMillis()) {
 				currentDay.setTime(new Date(songFile.lastModified()));
 				currentDay.set(Calendar.HOUR_OF_DAY, 0);
@@ -236,7 +229,7 @@ public class DownloadGUI extends JFrame {
 				try {
 					info.setYear(Integer.parseInt(year));
 				} catch (NumberFormatException e) {
-
+					
 				}
 			}
 			ItemPanel itemPanel = panels[i];

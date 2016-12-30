@@ -28,6 +28,8 @@ import org.json.JSONTokener;
 import utilities.database.FileDatabase;
 import youtube.SongData;
 import youtube.Youtube;
+import youtube.YoutubeDownloader;
+import youtube.YoutubeInMP3;
 import youtube.YoutubeMP3;
 import youtube.YoutubeVideo;
 
@@ -44,6 +46,12 @@ public class Analytics {
 	}
 	public static File iTunesMusic = new File(System.getProperty("user.home") + "/Music/iTunes/iTunes Media/Music");
 
+	/**
+	 * The downloader to use for downloading mp3 files. The default instance is
+	 * YoutubeMP3
+	 */
+	public static YoutubeDownloader downloader = new YoutubeInMP3();
+	
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("win");
 	}
@@ -83,7 +91,7 @@ public class Analytics {
 			if (dph.isCancelled())
 				return null;
 		} else {
-			song = new YoutubeMP3().downloadSong(dph, video);
+			song = Analytics.downloader.downloadSong(dph, video);
 			if (dph.isCancelled())
 				return null;
 			if (song == null || song.getSongBytes() == null) {
@@ -320,7 +328,7 @@ public class Analytics {
 		} else {
 			search = title + " " + artist;
 		}
-		search = search.replaceAll("\\[.*?\\]", "").trim().replace(" ", "%20").replace("'", "%27").replace("&", "%26");
+		search = search.replaceAll("\\[.*?\\]", "").trim().replace(" ", "%20").replace("'", "%27").replace("’", "%27").replace("&", "%26");
 		byte[] bytes = client.readSite("https://api.spotify.com/v1/search?type=track&q=" + search);
 		boolean spotify = false;
 		// System.out.println("SpOtIfY||| " + track.getForeignID());

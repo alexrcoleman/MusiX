@@ -41,6 +41,7 @@ public class ItemPanel extends JPanel implements ComponentListener {
 	private JPanel completedContent;
 	private JPanel loadingContent;
 	private List<JPanel> panels;
+	private ResultPanel resultPanel;
 
 	public int id;
 
@@ -160,11 +161,14 @@ public class ItemPanel extends JPanel implements ComponentListener {
 		setTitle(info.getTitle());
 		setAlbum(info.getAlbum());
 		setAlbumArtwork(info.getAlbumArtwork());
+		this.resultPanel = new ResultPanel(ItemPanel.this, ItemPanel.this.info);
 		this.addMouseListener(new MouseListener() {
 			public void mouseReleased(MouseEvent arg0) {
 			}
 
 			public void mousePressed(MouseEvent arg0) {
+				 DownloadGUI.instance.changePanel(ItemPanel.this.resultPanel);
+				//DownloadGUI.instance.changePanel(new ResultPanel(ItemPanel.this, ItemPanel.this.info));
 			}
 
 			public void mouseExited(MouseEvent arg0) {
@@ -174,18 +178,6 @@ public class ItemPanel extends JPanel implements ComponentListener {
 			}
 
 			public void mouseClicked(MouseEvent event) {
-				try {
-					DownloadGUI.instance.changePanel(new ResultPanel(ItemPanel.this, ItemPanel.this.info));
-				} catch (java.lang.OutOfMemoryError e) {
-					Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-					Thread[] threadArray = threadSet.toArray(new Thread[threadSet.size()]);
-					for (Thread t : threadArray) {
-						System.out.println(t.toString() + ":");
-						for (StackTraceElement ste : t.getStackTrace()) {
-							System.out.println("\t" + ste.toString());
-						}
-					}
-				}
 			}
 		});
 	}
@@ -228,10 +220,6 @@ public class ItemPanel extends JPanel implements ComponentListener {
 
 	public void setProgressText(String text) {
 		progressBar.setString(text);
-	}
-
-	public Color col(int r, int g, int b) {
-		return new Color(Math.min(255, Math.max(r, 0)), Math.min(255, Math.max(g, 0)), Math.min(255, Math.max(b, 0)));
 	}
 
 	public static Color cachedColor;

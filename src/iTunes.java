@@ -26,14 +26,12 @@ public class iTunes {
 	 * @return File of the mp3 file in the music folder
 	 */
 	public static File getFile(SongInfo info) {
-		File artist = new File(MUSIC_FOLDER, info.getArtist().replace("/", "_"));
+		File artist = new File(MUSIC_FOLDER, info.getArtist().replace("/", "_").replace("|", "_"));
 		File album = new File(artist, (info.getAlbum() == null || info
 				.getAlbum().trim().isEmpty()) ? "Unknown Album" : info
-				.getAlbum().replace("/", "_"));
+				.getAlbum().replace("/", "_").replace("|", "_"));
 		final File song;
 		String filename;
-		System.out.println(info.getDiscNumber() + " / " +info.getDiscMax());
-		System.out.println(info.getTrackNumber() + " / " +info.getTrackMax());
 		if(info.getDiscMax() > 1) {
 			filename = info.getDiscNumber() + "-"
 					+ (info.getTrackNumber() < 10 ? "0" : "")
@@ -45,7 +43,7 @@ public class iTunes {
 			filename = info.getTitle();
 		}
 		song = new File(album,Analytics.validateFileName(filename + ".mp3"));
-		System.out.println(info.getTitle() + " -> " + song.getAbsolutePath());
+		// System.out.println(info.getTitle() + " -> " + song.getAbsolutePath());
 
 		return song;
 	}

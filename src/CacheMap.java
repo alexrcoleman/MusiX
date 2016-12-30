@@ -20,6 +20,9 @@ public class CacheMap<K, V> extends HashMap<K, V> {
 	@Override
 	public V put(K key, V value) {
 		V ret = super.put(key, value);
+		System.out.println(deque);
+		if(!deque.isEmpty())
+		System.out.println(deque.peekLast());
 		if (deque.isEmpty() || !deque.peekLast().equals(key)) {
 			freq.put(key, (freq.containsKey(key) ? freq.get(key) : 0) + 1);
 			deque.offer(key);

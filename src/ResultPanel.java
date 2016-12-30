@@ -70,28 +70,6 @@ public class ResultPanel extends JPanel {
 	private JButton backButton;
 	private SongInfo info;
 	private ItemPanel itemPanel;
-
-	public static BufferedImage iTunesPlusImg;
-	public static BufferedImage iTunesMinusImg;
-	public static BufferedImage clipboardImg;
-	public static BufferedImage mp3Img;
-	public static BufferedImage youtubeImg;
-	{
-		try {
-			iTunesPlusImg = ImageIO.read(ResultPanel.class
-					.getResourceAsStream("/resources/iTunes_Plus.png"));
-			iTunesMinusImg = ImageIO.read(ResultPanel.class
-					.getResourceAsStream("/resources/iTunes_Minus.png"));
-			clipboardImg = ImageIO.read(ResultPanel.class
-					.getResourceAsStream("resources/clipboard.png"));
-			mp3Img = ImageIO.read(ResultPanel.class
-					.getResourceAsStream("resources/Music Folder.png"));
-			youtubeImg = ImageIO.read(ResultPanel.class
-					.getResourceAsStream("resources/YoutubeLogo.png"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 	public static final Object TAG_LOCK = new Object();
 	private boolean escapeLast = false;
 
@@ -187,8 +165,7 @@ public class ResultPanel extends JPanel {
 	 */
 	private void handleTransfer() {
 		info.getPublic().delete();
-		File newFile = new File(new File(Analytics.getPublicFolder(),
-				info.getArtist()), info.getTitle() + ".mp3");
+		File newFile = new File(new File(Analytics.getPublicFolder(), info.getArtist()), info.getTitle() + ".mp3");
 		info.setPublic(newFile);
 		newFile.getParentFile().mkdirs();
 		if (newFile.exists()) // TODO: Maybe make this optional
@@ -222,8 +199,7 @@ public class ResultPanel extends JPanel {
 			}
 		});
 
-		closePanel = new ImagePanel(
-				ItemPanel.class.getResourceAsStream("resources/close.png"));
+		closePanel = new ImagePanel(Utilities.IMAGE_CLOSE, "IMAGE_CLOSE");
 
 		closePanel.setPreferredSize(new Dimension(22, 22));
 		closePanel.makeButton();
@@ -244,8 +220,7 @@ public class ResultPanel extends JPanel {
 				}
 				itemPanel.getParent().remove(itemPanel);
 				DownloadGUI.panelList.remove(itemPanel);
-				DownloadGUI.instance
-						.changePanel(DownloadGUI.instance.searchPanel);
+				DownloadGUI.instance.changePanel(DownloadGUI.instance.searchPanel);
 				DownloadGUI.instance.repaint();
 			}
 		});
@@ -392,21 +367,15 @@ public class ResultPanel extends JPanel {
 		// lyricsEditor.setText("THIS IS A TEST.");
 		lyricsEditor.setText(info.getLyrics());
 		lyricsEditor.setFont(new Font("Courier", Font.PLAIN, 12));
-		listener = new LyricsChangeListener();
-		lyricsEditor.getDocument().addDocumentListener(listener);
 		lyricsEditor.setCaretPosition(0);
-		listener.start();
 		scrollPane = new JScrollPane(lyricsEditor);
-		scrollPane
-				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane
-				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		// scrollPane.setBounds(10, 88, 285, 206);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(5);
 
 		albumPanel = new ImagePanel();
 		albumPanel.setAsync(false);
-		albumPanel.setImage(info.getAlbumArtwork());
 		albumPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 3, 3));
 		albumPanel.setPreferredSize(new Dimension(157, 157));
 		// add(albumPanel);
@@ -421,12 +390,11 @@ public class ResultPanel extends JPanel {
 		backButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				DownloadGUI.instance
-						.changePanel(DownloadGUI.instance.searchPanel);
+				DownloadGUI.instance.changePanel(DownloadGUI.instance.searchPanel);
 			}
 		});
 
-		ImagePanel youtubeImage = new ImagePanel(youtubeImg);
+		ImagePanel youtubeImage = new ImagePanel(Utilities.IMAGE_YOUTUBE, "IMAGE_YOUTUBE");
 		youtubeImage.setPreferredSize(new Dimension(47, 50));
 		youtubeImage.setToolTipText("Open YouTube link");
 		youtubeImage.makeButton();
@@ -434,10 +402,8 @@ public class ResultPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					Desktop.getDesktop().browse(
-							new URI("https://www.youtube.com/watch?v="
-									+ ResultPanel.this.info.getYoutubeVideo()
-											.getVideoId()));
+					Desktop.getDesktop().browse(new URI(
+							"https://www.youtube.com/watch?v=" + ResultPanel.this.info.getYoutubeVideo().getVideoId()));
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (URISyntaxException e1) {
@@ -447,7 +413,7 @@ public class ResultPanel extends JPanel {
 		});
 		youtubeImage.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-		ImagePanel mp3Image = new ImagePanel(mp3Img);
+		ImagePanel mp3Image = new ImagePanel(Utilities.IMAGE_MP3, "IMAGE_MP3");
 		mp3Image.setPreferredSize(new Dimension(45, 45));
 		mp3Image.makeButton();
 		mp3Image.setToolTipText("Open in file browser");
@@ -455,12 +421,10 @@ public class ResultPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					Desktop.getDesktop().open(
-							ResultPanel.this.info.getPublic().getParentFile());
+					Desktop.getDesktop().open(ResultPanel.this.info.getPublic().getParentFile());
 					if (Analytics.isWindows()) {
 						Runtime rt = Runtime.getRuntime();
-						rt.exec("explorer /select,"
-								+ ResultPanel.this.info.getPublic());
+						rt.exec("explorer /select," + ResultPanel.this.info.getPublic());
 					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
@@ -489,10 +453,10 @@ public class ResultPanel extends JPanel {
 		iTunesImagePanel.setPreferredSize(new Dimension(45, 45));
 		if (iTunes.iTunesExists(info)) {
 			iTunesImagePanel.setToolTipText("Remove from iTunes");
-			iTunesImagePanel.setImage(iTunesMinusImg);
+			iTunesImagePanel.setImage(Utilities.IMAGE_ITUNES_MINUS, "IMAGE_ITUNES_MINUS");
 		} else {
 			iTunesImagePanel.setToolTipText("Add to iTunes");
-			iTunesImagePanel.setImage(iTunesPlusImg);
+			iTunesImagePanel.setImage(Utilities.IMAGE_ITUNES_PLUS, "IMAGE_ITUNES_PLUS");
 		}
 		iTunesImagePanel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -500,8 +464,9 @@ public class ResultPanel extends JPanel {
 				if (iTunes.iTunesExists(info)) {
 					iTunes.removeFromiTunes(info);
 					iTunesImagePanel.setToolTipText("Add to iTunes");
-					iTunesImagePanel.setImage(iTunesPlusImg);
-					iTunesImagePanel.repaint();
+					iTunesImagePanel.setImage(Utilities.IMAGE_ITUNES_PLUS, "IMAGE_ITUNES_PLUS");
+					//iTunesImagePanel.repaint();
+					//ResultPanel.this.revalidate();
 				} else {
 					try {
 						listener.updateLyrics();
@@ -509,8 +474,9 @@ public class ResultPanel extends JPanel {
 							iTunes.addToiTunes(info);
 						}
 						iTunesImagePanel.setToolTipText("Remove from iTunes");
-						iTunesImagePanel.setImage(iTunesMinusImg);
-						iTunesImagePanel.repaint();
+						iTunesImagePanel.setImage(Utilities.IMAGE_ITUNES_MINUS, "IMAGE_ITUNES_MINUS");
+						//iTunesImagePanel.repaint();
+						//ResultPanel.this.revalidate();
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -534,32 +500,24 @@ public class ResultPanel extends JPanel {
 				try {
 					info.setSpotifyID(null);
 
-
 					audio = new MP3File(info.getPublic());
 					tag = audio.getTagOrCreateAndSetDefault();
-					Analytics.addSpotifyData(info.getTitle(), info.getArtist(),
-							info, tag, true);
+					Analytics.addSpotifyData(info.getTitle(), info.getArtist(), info, tag, true);
 
 					lyrics = Lyrics.search(info.getTitle(), info.getArtist());
 					if (lyrics == null)
 						lyrics = "";
-					System.out.println("Got lyrics: len=" + lyrics.length());
 					if (lyrics.isEmpty())
 						tag.deleteField(FieldKey.LYRICS);
 					else
 						tag.setField(FieldKey.LYRICS, lyrics);
 					audio.commit();
-					
-					
 
-					
-					
 					if (info.getCache() != null && info.getCache().exists()) {
 
 						audio = new MP3File(info.getCache());
 						tag = audio.getTagOrCreateAndSetDefault();
-						Analytics.addSpotifyData(info.getTitle(),
-								info.getArtist(), info, tag, false);
+						Analytics.addSpotifyData(info.getTitle(), info.getArtist(), info, tag, false);
 						if (lyrics.isEmpty())
 							tag.deleteField(FieldKey.LYRICS);
 						else
@@ -612,8 +570,7 @@ public class ResultPanel extends JPanel {
 		c.gridy = 0;
 		JPanel bufferAlbumArtwork = new JPanel(new BorderLayout());
 		bufferAlbumArtwork.add(albumPanel, BorderLayout.SOUTH);
-		bufferAlbumArtwork.setBorder(BorderFactory
-				.createEmptyBorder(3, 3, 3, 3));
+		bufferAlbumArtwork.setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
 
 		albumHolder.add(bufferAlbumArtwork, c);
 		// albumHolder.add(Box.createVerticalGlue());
@@ -655,10 +612,6 @@ public class ResultPanel extends JPanel {
 		this.add(northPanel, BorderLayout.NORTH);
 		this.add(centerPanel, BorderLayout.CENTER);
 		this.add(eastPanel, BorderLayout.EAST);
-
-		// initializeAlbumArtwork();
-
-		// albumPanel.setImage(bi);
 	}
 
 	/**
@@ -703,8 +656,7 @@ public class ResultPanel extends JPanel {
 			long r = 0, g = 0, b = 0, c = 0;
 			for (int x = 0; x < bi.getWidth(); x++) {
 				for (int y = 0; y < bi.getHeight(); y++) {
-					if (x == 0 || y == 0 || x == bi.getWidth()
-							|| y == bi.getHeight()) {
+					if (x == 0 || y == 0 || x == bi.getWidth() || y == bi.getHeight()) {
 						Color color = new Color(bi.getRGB(x, y));
 						r += color.getRed();
 						g += color.getGreen();
@@ -724,29 +676,23 @@ public class ResultPanel extends JPanel {
 					Color match = color;
 					for (Entry<Color, Integer> entry : colorMap.entrySet()) {
 						if (ResultPanel.getColorDistance(color, entry.getKey()) <= 15000
-								|| ResultPanel.getColorDistance(
-										color.brighter(), entry.getKey()) <= 15000) {
+								|| ResultPanel.getColorDistance(color.brighter(), entry.getKey()) <= 15000) {
 							match = entry.getKey();
 							break;
 						}
 					}
-					colorMap.put(match,
-							(colorMap.containsKey(match) ? colorMap.get(match)
-									: 0) + 1);
+					colorMap.put(match, (colorMap.containsKey(match) ? colorMap.get(match) : 0) + 1);
 				}
 			}
-			List<Entry<Color, Integer>> list = new LinkedList<Entry<Color, Integer>>(
-					colorMap.entrySet());
+			List<Entry<Color, Integer>> list = new LinkedList<Entry<Color, Integer>>(colorMap.entrySet());
 			Collections.sort(list, new Comparator<Entry<Color, Integer>>() {
-				public int compare(Entry<Color, Integer> m1,
-						Entry<Color, Integer> m2) {
+				public int compare(Entry<Color, Integer> m1, Entry<Color, Integer> m2) {
 					return (m2.getValue()).compareTo(m1.getValue());
 				}
 			});
 			// System.out.println(list);
 			if (list.size() < 3) {
-				System.out
-						.println("Forced into using border (lack of color scheme)");
+				System.out.println("Forced into using border (lack of color scheme)");
 				System.out.println(list);
 				Color opposing = ResultPanel.getOpposingColor(border);
 				songLabel.setForeground(opposing);
@@ -769,14 +715,12 @@ public class ResultPanel extends JPanel {
 				songLabel.setForeground(list.get(1).getKey());
 				albumLabel.setForeground(list.get(1).getKey());
 
-				if (ResultPanel.getColorDistance(this.getBackground(), list
-						.get(2).getKey()) > 5000) {
+				if (ResultPanel.getColorDistance(this.getBackground(), list.get(2).getKey()) > 5000) {
 					System.out.println("Using avg");
 					artistLabel.setForeground(list.get(2).getKey());
 				} else {
 					System.out.println("Using complement");
-					artistLabel.setForeground(ResultPanel.getOpposingColor(this
-							.getBackground()));
+					artistLabel.setForeground(ResultPanel.getOpposingColor(this.getBackground()));
 				}
 			}
 			for (int x = 0; x < bi.getWidth(); x++) {
@@ -789,14 +733,12 @@ public class ResultPanel extends JPanel {
 					if (y > bi.getHeight() / 2.0)
 						borderY = bi.getHeight();
 					int alpha = 175;
-					if (Math.abs(borderX - x) <= 25
-							&& Math.abs(borderX - x) < Math.abs(borderY - y))
+					if (Math.abs(borderX - x) <= 25 && Math.abs(borderX - x) < Math.abs(borderY - y))
 						alpha = (int) (Math.abs(borderX - x) * 175 / 25.0);
 					else if (Math.abs(borderY - y) <= 25)
 						alpha = (int) (Math.abs(borderY - y) * 175 / 25.0);
 					alpha = Math.max(0, Math.min(255, alpha));
-					bi.setRGB(x, y, new Color(color.getRed(), color.getGreen(),
-							color.getBlue(), alpha).getRGB());
+					bi.setRGB(x, y, new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha).getRGB());
 				}
 			}
 		}
@@ -811,8 +753,7 @@ public class ResultPanel extends JPanel {
 	 * @return Color that contrats with color
 	 */
 	public static Color getContrastColor(Color color) {
-		return getContrastColor(color.getRed(), color.getGreen(),
-				color.getBlue());
+		return getContrastColor(color.getRed(), color.getGreen(), color.getBlue());
 	}
 
 	/**
@@ -856,8 +797,7 @@ public class ResultPanel extends JPanel {
 	 * @return Opposing color that can be drawn on top of
 	 */
 	public static Color getOpposingColor(Color color) {
-		return getOpposingColor(color.getRed(), color.getGreen(),
-				color.getBlue());
+		return getOpposingColor(color.getRed(), color.getGreen(), color.getBlue());
 	}
 
 	private static int C_THRESHOLD = 30;
@@ -875,9 +815,7 @@ public class ResultPanel extends JPanel {
 	 * @return Opposing color that can be drawn on top of
 	 */
 	public static Color getOpposingColor(int r, int g, int b) {
-		if (Math.abs(r - 127.5) < C_THRESHOLD
-				&& Math.abs(g - 127.5) < C_THRESHOLD
-				&& Math.abs(b - 127.5) < C_THRESHOLD)
+		if (Math.abs(r - 127.5) < C_THRESHOLD && Math.abs(g - 127.5) < C_THRESHOLD && Math.abs(b - 127.5) < C_THRESHOLD)
 			return getContrastColor(r, g, b);
 		return getInverseColor(r, g, b);
 	}
@@ -892,9 +830,8 @@ public class ResultPanel extends JPanel {
 	 * @return (Non-negative) distance between two colors
 	 */
 	public static int getColorDistance(Color a, Color b) {
-		return (int) (Math.pow((a.getRed() - b.getRed()), 2)
-				+ Math.pow((a.getGreen() - b.getGreen()), 2) + Math.pow(
-				(a.getBlue() - b.getBlue()), 2));
+		return (int) (Math.pow((a.getRed() - b.getRed()), 2) + Math.pow((a.getGreen() - b.getGreen()), 2)
+				+ Math.pow((a.getBlue() - b.getBlue()), 2));
 	}
 
 	private JButton refreshButton;
@@ -909,8 +846,7 @@ public class ResultPanel extends JPanel {
 	 * @return Mixed color
 	 */
 	public static Color getMixedColor(Color a, Color b) {
-		return new Color((a.getRed() + b.getRed()) / 2,
-				(a.getGreen() + b.getGreen()) / 2,
+		return new Color((a.getRed() + b.getRed()) / 2, (a.getGreen() + b.getGreen()) / 2,
 				(a.getBlue() + b.getBlue()) / 2);
 	}
 
@@ -918,27 +854,23 @@ public class ResultPanel extends JPanel {
 	 * To be called internally when this panel is hidden
 	 */
 	protected void onForeground() {
-		listener.foreground = true;
-		lyricsEditor.getDocument().removeDocumentListener(listener);
-		listener.updateLyrics();
-		listener = null;
-		System.out.println("Foregrounded");
+		if(listener != null) {
+			listener.foreground = true;
+			lyricsEditor.getDocument().removeDocumentListener(listener);
+			listener.updateLyrics();
+			listener = null;
+		}
+		albumPanel.setImage((BufferedImage)null);
 	}
-
+	
 	/**
 	 * To be called internally when this panel is put back in view
 	 */
 	protected void onResume() {
-		if (listener != null) {
-			listener.foreground = false;
-			if (!listener.isAlive())
-				listener.start();
-		} else {
-			listener = new LyricsChangeListener();
-			lyricsEditor.getDocument().addDocumentListener(listener);
-			listener.start();
-		}
-
+		listener = new LyricsChangeListener();
+		lyricsEditor.getDocument().addDocumentListener(listener);
+		listener.start();
+		albumPanel.setImage(info.getAlbumArtwork());
 	}
 
 	class LyricsChangeListener extends Thread implements DocumentListener {
@@ -968,8 +900,7 @@ public class ResultPanel extends JPanel {
 		@Override
 		public void run() {
 			while (!foreground) {
-				if (lastChange != 0
-						&& System.currentTimeMillis() > lastChange + 3000) {
+				if (lastChange != 0 && System.currentTimeMillis() > lastChange + 3000) {
 					lastChange = 0;
 					updateLyrics();
 				}
@@ -981,7 +912,7 @@ public class ResultPanel extends JPanel {
 		}
 
 		public void updateLyrics() {
-			if(lyricsEditor.getText().equals(info.getLyrics()))
+			if (lyricsEditor.getText().equals(info.getLyrics()))
 				return;
 			System.out.println("Updating lyrics");
 			info.setLyrics(lyricsEditor.getText());
@@ -1037,21 +968,17 @@ public class ResultPanel extends JPanel {
 
 		@Override
 		public DataFlavor[] getTransferDataFlavors() {
-			return new DataFlavor[] { DataFlavor.javaFileListFlavor,
-					DataFlavor.stringFlavor };
+			return new DataFlavor[] { DataFlavor.javaFileListFlavor, DataFlavor.stringFlavor };
 		}
 
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
-			return DataFlavor.javaFileListFlavor.equals(flavor)
-					|| DataFlavor.stringFlavor.equals(flavor);
+			return DataFlavor.javaFileListFlavor.equals(flavor) || DataFlavor.stringFlavor.equals(flavor);
 		}
 
 		@Override
-		public Object getTransferData(DataFlavor flavor)
-				throws UnsupportedFlavorException, IOException {
-			System.out.println("Transfer flavor: "
-					+ flavor.getHumanPresentableName());
+		public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+			System.out.println("Transfer flavor: " + flavor.getHumanPresentableName());
 			if (flavor.isFlavorJavaFileListType())
 				return files;
 			StringBuilder sb = new StringBuilder();
@@ -1062,8 +989,7 @@ public class ResultPanel extends JPanel {
 		}
 
 		public void setClipboard() {
-			Toolkit.getDefaultToolkit().getSystemClipboard()
-					.setContents(this, null);
+			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(this, null);
 		}
 	}
 }

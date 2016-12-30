@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -22,6 +23,7 @@ public class ImagePanel extends JPanel implements ComponentListener {
 	private boolean async = true;
 	private boolean pressed = false;
 	private boolean isButton = false;
+	private static HashMap<String, ImagePanel> cache = new HashMap<>();
 
 	public void makeButton() {
 		isButton = true;
@@ -66,18 +68,46 @@ public class ImagePanel extends JPanel implements ComponentListener {
 		setImage(image);
 	}
 
+	public ImagePanel(BufferedImage image, String tag) {
+		this.setBackground(new Color(0, 0, 0, 0));
+		setImage(image, tag);
+	}
+
 	public ImagePanel(byte[] bytes) {
 		this.setBackground(new Color(0, 0, 0, 0));
 		setImage(bytes);
 	}
 
 	public void setImage(BufferedImage image) {
-		BufferedImage convertedImg = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		if(image == null) {
+			this.image = null;
+			this.scaled = null;
+			this.scaledPressed = null;
+			return;
+		}
+		BufferedImage convertedImg = new BufferedImage(image.getWidth(), image.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = convertedImg.createGraphics();
 		g.drawImage(image, 0, 0, null);
 		this.image = convertedImg;
 		resizeImage();
 		this.repaint();
+	}
+
+	public void setImage(BufferedImage image, String tag) {
+		ImagePanel cached;
+		if (!cache.containsKey(tag)) {
+			cached = new ImagePanel();
+			cached.setAsync(false);
+			cached.setImage(image);
+			cache.put(tag, cached);
+		} else {
+			cached = cache.get(tag);
+		}
+		this.image = cached.image;
+		this.scaled = cached.scaled;
+		this.scaledPressed = cached.scaledPressed;
+		this.revalidate();
 	}
 
 	public void setImage(byte[] bytes) {
@@ -135,14 +165,15 @@ public class ImagePanel extends JPanel implements ComponentListener {
 		}
 		int width = this.getWidth();
 		int height = width;
-		int x = 0, y = (this.getHeight() - this.getWidth())/2;
-		if(y < 0)
+		int x = 0, y = (this.getHeight() - this.getWidth()) / 2;
+		if (y < 0)
 			y = 0;
 		if (scaled != null) {
-			g.drawImage(pressed ? scaledPressed : scaled, x, y, width,height, null);
+			g.drawImage(pressed ? scaledPressed : scaled, x, y, width, height, null);
 		}
-		//g.drawString("(" + this.getWidth() + "," + this.getHeight(), this.getWidth()/2, this.getHeight()/2);
-		//g.drawLine(0, 0, this.getWidth(), this.getHeight());
+		// g.drawString("(" + this.getWidth() + "," + this.getHeight(),
+		// this.getWidth()/2, this.getHeight()/2);
+		// g.drawLine(0, 0, this.getWidth(), this.getHeight());
 	}
 
 	int[] darken(int[] argb, int percentage) {
@@ -190,7 +221,8 @@ public class ImagePanel extends JPanel implements ComponentListener {
 	private void resizeImage() {
 		if (image == null)
 			return;
-		this.scaled = toBufferedImage(image.getScaledInstance(this.getWidth() == 0 ? 1 : this.getWidth(), this.getWidth() == 0 ? 1 : -1, Image.SCALE_AREA_AVERAGING));
+		this.scaled = toBufferedImage(image.getScaledInstance(this.getWidth() == 0 ? 1 : this.getWidth(),
+				this.getWidth() == 0 ? 1 : -1, Image.SCALE_AREA_AVERAGING));
 		if (isButton) {
 			this.scaledPressed = new BufferedImage(scaled.getWidth(), scaled.getHeight(), BufferedImage.TYPE_INT_ARGB);
 			for (int x = 0; x < scaled.getWidth(); x++) {
@@ -215,19 +247,14 @@ public class ImagePanel extends JPanel implements ComponentListener {
 
 	@Override
 	public void componentMoved(ComponentEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void componentShown(ComponentEvent e) {
-
 	}
 
 	@Override
 	public void componentHidden(ComponentEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 }
