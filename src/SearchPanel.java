@@ -1,17 +1,3 @@
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import com.coleman.utilities.http.Client;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagLayout;
@@ -20,12 +6,21 @@ import java.awt.event.KeyEvent;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Set;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import com.coleman.utilities.http.Client;
 
 public class SearchPanel extends JPanel {
 	private static final long serialVersionUID = -1270810964594759400L;
@@ -36,16 +31,17 @@ public class SearchPanel extends JPanel {
 	public JPanel panelList;
 
 	private SearchListener searchListener;
-
+	private JFrame frame;
 	/**
 	 * Create the panel.
 	 */
-	public SearchPanel() {
+	public SearchPanel(JFrame frame) {
+		this.frame = frame;
 		setLayout(new BorderLayout(0, 0));
 
 		searchTextField = new JTextField();
 		searchTextField.setBounds(0, 0, 370, 28);
-		searchTextField.setBackground(new Color(255, 255, 255, 100));
+		searchTextField.setBackground(new Color(255, 255, 255, 255));
 		searchListener = new SearchListener();
 		searchTextField.getDocument().addDocumentListener(searchListener);
 		searchTextField.addKeyListener(new KeyAdapter() {

@@ -264,7 +264,7 @@ public class DownloadGUI extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 
-		searchPanel = new SearchPanel();
+		searchPanel = new SearchPanel(this);
 		currentPanel = searchPanel;
 		contentPane.add(searchPanel, BorderLayout.CENTER);
 
