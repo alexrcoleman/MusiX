@@ -12,7 +12,16 @@ public class FileDatabase<K, V> extends Database<K, V> {
 
 	public FileDatabase(File file) {
 		this(file, false, false);
-		readFromFile();
+		if(!file.exists()) {
+			file.getParentFile().mkdirs();
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			readFromFile();
+		}
 	}
 
 	public FileDatabase(File file, boolean writeLock, boolean readLock) {
