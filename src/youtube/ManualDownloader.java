@@ -169,10 +169,7 @@ public class ManualDownloader extends YoutubeDownloader {
 			if(!extractResource("core/resources/ffmpeg.exe", ffmpeg))
 				return;
 		}
-		String command = ffmpeg.getAbsolutePath() + " -i \"" + in.getAbsolutePath() + "\" \"" + out.getAbsolutePath()
-				+ "\"";
-		System.out.println(command);
-		ProcessBuilder pb = new ProcessBuilder(ffmpeg.getAbsolutePath(), "-i", in.getAbsolutePath(),
+		ProcessBuilder pb = new ProcessBuilder(ffmpeg.getAbsolutePath(), "-i", in.getAbsolutePath(), "-b:a", "256k",
 				out.getAbsolutePath());
 		pb.redirectErrorStream(true);
 		Process p = pb.start();
