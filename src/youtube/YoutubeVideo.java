@@ -39,8 +39,6 @@ public class YoutubeVideo {
 		Client c = new Client();
 		c.setUserAgent("Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0");
 		String html = new String(c.readSite(videoUrl));
-//		System.out.println(videoUrl);
-//		System.out.println("HTML: " + html);
 		Matcher songMetaDataMatcher = songMetaDataPattern.matcher(html);
 		Matcher videoTitleMatcher = videoTitlePattern.matcher(html);
 		if (songMetaDataMatcher.find()) {
@@ -62,17 +60,15 @@ public class YoutubeVideo {
 			if (ftIndex != -1)
 				this.songArtist = this.songArtist.substring(0, ftIndex);
 			this.songArtist = this.songArtist.trim();
-		} else {
-			System.out.println("FOUND METADATA: " + false);
 		}
 		if (videoTitleMatcher.find())
 			this.videoTitle = videoTitleMatcher.group(1).replace("&#39;", "'");
 		this.videoTitle = parseTitle(this.videoTitle);
-		
-		System.out.println("FOUND TITLE: " + (this.videoTitle != null));
 	}
 	private static final String[] featureStrings = { "ft.", "featuring", "Featuring", "Feat.", "feat.", "feat" };
 	public static String parseTitle(String title) {
+		if(title == null)
+			return "[title missing]";
 		title = title.replaceAll("\\(.*?\\)", "");
 		title = title.replaceAll("\\[.*?\\]", "");
 		if(title.contains("-"))

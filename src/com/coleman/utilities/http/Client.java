@@ -120,6 +120,7 @@ public class Client {
 		try {
 			URL url = new URL(site);
 			URLConnection conn = url.openConnection();
+			
 			conn = initConnection((HttpURLConnection) conn, null, null);
 			is = conn.getInputStream();
 
@@ -379,7 +380,7 @@ public class Client {
 	 * @return Modified HttpURLConnection
 	 */
 	private HttpURLConnection initConnection(HttpURLConnection conn, String contentType, String method) {
-
+		HttpURLConnection.setFollowRedirects(true);
 		String mycookies = Cookies.makeString(this.getCookies().getSiteCookies(conn.getURL().toString()));
 		try {
 			if (method != null)
@@ -389,6 +390,9 @@ public class Client {
 		}
 		if (contentType != null)
 			conn.setRequestProperty("Content-Type", contentType);
+		for(String key : headers.keySet()) {
+			conn.setRequestProperty(key, headers.get(key));
+		}
 		if (areCookiesEnabled())
 			conn.setRequestProperty("Cookie", mycookies);
 		if (getUserAgent() != null)
@@ -401,6 +405,7 @@ public class Client {
 		return conn;
 
 	}
+	public static HashMap<String,String> headers = new HashMap<>();
 
 	/**
 	 * Converts a map of key:value strings to a key1=value1&key2=value2&key3=value3... string
@@ -475,17 +480,12 @@ public class Client {
 		long maxBytes = -1;
 		byte[] bytes;
 		long uid;
-
+		
+		private InputStream is;
 		public Downloader(String site, DownloadProgressHandler dph, long uid) {
-			this.site = site;
-			this.dph = dph;
-			this.uid = uid;
-		}
-
-		@Override
-		public void run() {
-			InputStream is = null;
 			try {
+				this.dph = dph;
+				this.uid = uid;
 				URL url = new URL(site);
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 				conn = initConnection(conn, null, null);
@@ -498,12 +498,30 @@ public class Client {
 						dph.sizeDetermined(maxBytes);
 					}
 				}
-
+	
 				is = conn.getInputStream();
-
+	
 				if (areCookiesEnabled()) {
 					saveCookies(conn);
 				}
+			} catch(Exception e) {
+				e.printStackTrace();
+				is = null;
+				if (dph != null)
+					dph.downloadFailed(e.getMessage());
+			}
+		}
+		public Downloader(InputStream is, DownloadProgressHandler dph, long uid, long maxBytes) {
+			this.dph = dph;
+			this.uid = uid;
+			this.is = is;
+			this.maxBytes = maxBytes;
+		}
+
+		@Override
+		public void run() {
+			try {
+				
 				BufferedInputStream stream = new BufferedInputStream(is);
 
 				final ByteArrayOutputStream byteOut;
@@ -511,17 +529,12 @@ public class Client {
 					byteOut = new ByteArrayOutputStream((int) maxBytes);
 				else
 					byteOut = new ByteArrayOutputStream();
-				byte[] buffer = new byte[2056];
+				byte[] buffer = new byte[1024*4];
 				int bytesRead;
 				long totalRead = 0;
 				if (dph != null) {
 					while ((bytesRead = stream.read(buffer)) > 0) {
-						try {
-							byteOut.write(buffer, 0, bytesRead);
-						} catch (java.lang.OutOfMemoryError e) {
-							System.err.println("Bad memory... @ " + System.currentTimeMillis());
-							System.gc();
-						}
+						byteOut.write(buffer, 0, bytesRead);
 						totalRead += bytesRead;
 						dph.progressUpdate(totalRead);
 						if (!dph.isAlive()) {

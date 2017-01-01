@@ -1,4 +1,4 @@
-# MusiX v1.2.0 #
+# MusiX v2.0.0 #
 Your standard program for downloading legally bought music from video sites.
 
 ## Setup ##
@@ -12,6 +12,12 @@ Also, the readme tells you the latest version number, so you can check and make 
 * Add option to paste in spotify URI for a track
 * Make the list of tracks filter based on what is currently being typed in the search field
 * Autodetect available updates
+
+### v2.0.0 ###
+* When running windows, no longer relies on a site to convert, now downloads the video and converts it itself. This is susceptible to youtube messing with their video URL encryption, but its cracked for now
+* Music should be higher quality now, chooses the highest video quality and converts it to mp3 manually
+* Downloads and converts all videos fairly quickly
+* Fixed visual glitches on the text field
 
 ### v1.2.0 ###
 * Switched to a new downloader since the old one seems to be down

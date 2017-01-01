@@ -74,7 +74,7 @@ public class Youtube {
 				if (bannedVideos.contains(videoid))
 					continue;
 				YoutubeVideo video = new YoutubeVideo(
-						"http://www.youtube.com/watch?v=" + videoid, videoid,
+						"https://www.youtube.com/watch?v=" + videoid, videoid,
 						null, null, title);
 				if (title.toLowerCase().contains("official audio")) {
 					videos.add(audioIndex, video);
@@ -118,7 +118,7 @@ public class Youtube {
 			String title = snippet.getString("title");
 			String videoid = item.getString("id");
 			YoutubeVideo video = new YoutubeVideo(
-					"http://www.youtube.com/watch?v=" + videoid, videoid, null,
+					"https://www.youtube.com/watch?v=" + videoid, videoid, null,
 					null, title);
 			videos.add(video);
 		}

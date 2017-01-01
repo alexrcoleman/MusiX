@@ -3,6 +3,7 @@ package com.coleman.utilities.http;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -60,6 +61,13 @@ public class ClientUtils {
 	 * @return String representation of bytes read
 	 */
 	public static byte[] readInputStream(InputStream is) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		boolean success = readInputStream(is, baos);
+		if(success)
+			return baos.toByteArray();
+		return null;
+	}
+	public static boolean readInputStream(InputStream is, OutputStream out) {
 		try {
 			BufferedInputStream stream;
 			if (is instanceof BufferedInputStream) {
@@ -67,19 +75,16 @@ public class ClientUtils {
 			} else {
 				stream = new BufferedInputStream(is);
 			}
-			ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			byte[] buffer = new byte[1024 * 4];
 			int bytesRead;
 			while ((bytesRead = stream.read(buffer)) > 0) {
-				byteOut.write(buffer, 0, bytesRead);
+				out.write(buffer, 0, bytesRead);
 			}
-			byte[] bytes = byteOut.toByteArray();
-			byteOut.close();
 			stream.close();
-			return bytes;
+			return true;
 		} catch (Exception e) {
-			return null;
 		}
+		return false;
 	}
 	
 	/**
