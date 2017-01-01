@@ -63,10 +63,13 @@ public class ManualDownloader extends YoutubeDownloader {
 				}
 				// System.out.println(map.get("type"));
 				// if(!map.get("type").contains("mp4"))
-
+				
 				if (map.get("type").contains("mp4")) {
+					System.out.println(map);
 					System.out.println(map.get("quality") + " " + map.get("type"));
-					return map.get("url") + "&signature=" + xm(map.get("s"));
+					if(map.containsKey("s"))
+						return map.get("url") + "&signature=" + xm(map.get("s"));
+					return map.get("url");
 				}
 			}
 			for (String line : ss) {
@@ -79,8 +82,11 @@ public class ManualDownloader extends YoutubeDownloader {
 					} catch (Exception e) {
 					}
 				}
+				System.out.println(map);
 				System.out.println(map.get("quality") + " " + map.get("type"));
-				return map.get("url") + "&signature=" + xm(map.get("s"));
+				if(map.containsKey("s"))
+					return map.get("url") + "&signature=" + xm(map.get("s"));
+				return map.get("url");
 			}
 			System.out.println("couldn't find a video?");
 		} else {
