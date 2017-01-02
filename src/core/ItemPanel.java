@@ -22,12 +22,234 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
+/*
+Agency FB
+Algerian
+AlienCaret
+Arial
+Arial Black
+Arial Narrow
+Arial Rounded MT Bold
+Arial Unicode MS
+Baskerville Old Face
+Bauhaus 93
+Bell MT
+Berlin Sans FB
+Berlin Sans FB Demi
+Bernard MT Condensed
+Blackadder ITC
+Bodoni MT
+Bodoni MT Black
+Bodoni MT Condensed
+Bodoni MT Poster Compressed
+Book Antiqua
+Bookman Old Style
+Bookshelf Symbol 7
+Bradley Hand ITC
+Britannic Bold
+Broadway
+Brush Script MT
+Calibri
+Calibri Light
+Californian FB
+Calisto MT
+Cambria
+Cambria Math
+Candara
+Castellar
+Centaur
+Century
+Century Gothic
+Century Schoolbook
+Chiller
+Colonna MT
+Comic Sans MS
+Consolas
+Constantia
+Cooper Black
+Copperplate Gothic Bold
+Copperplate Gothic Light
+Corbel
+Courier New
+Curlz MT
+Dialog
+DialogInput
+Ebrima
+Edwardian Script ITC
+Elephant
+Engravers MT
+Eras Bold ITC
+Eras Demi ITC
+Eras Light ITC
+Eras Medium ITC
+Felix Titling
+Footlight MT Light
+Forte
+Franklin Gothic Book
+Franklin Gothic Demi
+Franklin Gothic Demi Cond
+Franklin Gothic Heavy
+Franklin Gothic Medium
+Franklin Gothic Medium Cond
+Freestyle Script
+French Script MT
+Gabriola
+Gadugi
+Garamond
+Georgia
+Gigi
+Gill Sans MT
+Gill Sans MT Condensed
+Gill Sans MT Ext Condensed Bold
+Gill Sans Ultra Bold
+Gill Sans Ultra Bold Condensed
+Gloucester MT Extra Condensed
+Goudy Old Style
+Goudy Stout
+Haettenschweiler
+Harlow Solid Italic
+Harrington
+High Tower Text
+Impact
+Imprint MT Shadow
+Informal Roman
+InputMono Light
+InputSans Light
+InputSerif Light
+Javanese Text
+Jokerman
+Juice ITC
+Kristen ITC
+Kunstler Script
+Leelawadee UI
+Leelawadee UI Semilight
+Lucida Bright
+Lucida Calligraphy
+Lucida Console
+Lucida Fax
+Lucida Handwriting
+Lucida Sans
+Lucida Sans Typewriter
+Lucida Sans Unicode
+Magneto
+Maiandra GD
+Malgun Gothic
+Malgun Gothic Semilight
+Marlett
+Matura MT Script Capitals
+Microsoft Himalaya
+Microsoft JhengHei
+Microsoft JhengHei Light
+Microsoft JhengHei UI
+Microsoft JhengHei UI Light
+Microsoft New Tai Lue
+Microsoft PhagsPa
+Microsoft Sans Serif
+Microsoft Tai Le
+Microsoft YaHei
+Microsoft YaHei Light
+Microsoft YaHei UI
+Microsoft YaHei UI Light
+Microsoft Yi Baiti
+MingLiU-ExtB
+MingLiU_HKSCS-ExtB
+Mistral
+Modern No. 20
+Mongolian Baiti
+Monospaced
+Monotype Corsiva
+MS Gothic
+MS Outlook
+MS PGothic
+MS Reference Sans Serif
+MS Reference Specialty
+MS UI Gothic
+MT Extra
+MV Boli
+Myanmar Text
+Niagara Engraved
+Niagara Solid
+Nirmala UI
+Nirmala UI Semilight
+NSimSun
+OCR A Extended
+Old English Text MT
+Onyx
+Palace Script MT
+Palatino Linotype
+Papyrus
+Parchment
+Perpetua
+Perpetua Titling MT
+Pill Gothic 600mg Light
+Pill Gothic 600mg Semibd
+Playbill
+PMingLiU-ExtB
+Poor Richard
+Pristina
+Rage Italic
+Ravie
+Rockwell
+Rockwell Condensed
+Rockwell Extra Bold
+SansSerif
+Script MT Bold
+Segoe MDL2 Assets
+Segoe Print
+Segoe Script
+Segoe UI
+Segoe UI Black
+Segoe UI Emoji
+Segoe UI Historic
+Segoe UI Light
+Segoe UI Semibold
+Segoe UI Semilight
+Segoe UI Symbol
+Serif
+Showcard Gothic
+SimSun
+SimSun-ExtB
+Sitka Banner
+Sitka Display
+Sitka Heading
+Sitka Small
+Sitka Subheading
+Sitka Text
+Snap ITC
+Stencil
+Sylfaen
+Symbol
+Tahoma
+TeamViewer10
+Tempus Sans ITC
+Times New Roman
+Trebuchet MS
+Tw Cen MT
+Tw Cen MT Condensed
+Tw Cen MT Condensed Extra Bold
+Verdana
+Viner Hand ITC
+Vivaldi
+Vladimir Script
+Webdings
+Wide Latin
+Wingdings
+Wingdings 2
+Wingdings 3
+Yu Gothic
+Yu Gothic Light
+Yu Gothic Medium
+Yu Gothic UI
+Yu Gothic UI Light
+Yu Gothic UI Semibold
+Yu Gothic UI Semilight
+ */
 public class ItemPanel extends JPanel implements ComponentListener {
 	public static final Color ALBUM_COLOR = new Color(150,150,150);
-	public static final Font ALBUM_FONT = new Font("Helvetica", Font.PLAIN, 15);
-	public static final Font ARTIST_FONT = new Font("Helvetica", Font.PLAIN, 15);
-	public static final Font TITLE_FONT = new Font("Helvetica", Font.BOLD, 20);
+	public static final String FONT_FAMILY = "Helvetica";
+	public static final Font ALBUM_FONT = new Font(FONT_FAMILY, Font.PLAIN, 17);
+	public static final Font ARTIST_FONT = new Font(FONT_FAMILY, Font.PLAIN, 17);
+	public static final Font TITLE_FONT = new Font(FONT_FAMILY, Font.BOLD, 23);
 
 	private static final long serialVersionUID = -2104991772995031145L;
 	private JProgressBar progressBar;
@@ -97,7 +319,7 @@ public class ItemPanel extends JPanel implements ComponentListener {
 		this.panels.add(centerTop);
 		centerTop.setBackground(new Color(255, 0, 0, 0));
 
-		songLabel = new JLabel("Song title");
+		songLabel = new JLabelSmooth("Song title");
 		songLabel.setFont(TITLE_FONT);
 		songLabel.setPreferredSize(new Dimension(1000, 23));
 		centerTop.add(songLabel, BorderLayout.SOUTH);
@@ -113,10 +335,10 @@ public class ItemPanel extends JPanel implements ComponentListener {
 
 		this.panels.add(bottomRow);
 
-		artistLabel = new JLabel("The Artist");
+		artistLabel = new JLabelSmooth("The Artist");
 		artistLabel.setFont(ARTIST_FONT);
 		// artistLabel.setPreferredSize(new Dimension(1000, 20));
-		this.albumLabel = new JLabel("Test album");
+		this.albumLabel = new JLabelSmooth("Test album");
 		albumLabel.setFont(ALBUM_FONT);
 		albumLabel.setForeground(ALBUM_COLOR);
 		bottomRow.add(artistLabel);
@@ -133,7 +355,7 @@ public class ItemPanel extends JPanel implements ComponentListener {
 		progressBar.setStringPainted(true);
 		// add(progressBar, BorderLayout.CENTER);
 
-		videoLabel = new JLabel(videoTitle);
+		videoLabel = new JLabelSmooth(videoTitle);
 		videoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		videoLabel.setBounds(6, 6, 414, 16);
 

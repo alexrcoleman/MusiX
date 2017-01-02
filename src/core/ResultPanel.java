@@ -184,6 +184,7 @@ public class ResultPanel extends JPanel {
 	private CardLayout titleLayout;
 	private JPanel artistHolder;
 	private CardLayout artistLayout;
+	private boolean deleted;
 
 	/**
 	 * Create the panel.
@@ -195,7 +196,7 @@ public class ResultPanel extends JPanel {
 		this.setFocusable(true);
 		this.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				ResultPanel.this.requestFocus();
 			}
 		});
@@ -207,8 +208,9 @@ public class ResultPanel extends JPanel {
 		closePanel.setToolTipText("Delete");
 		closePanel.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				info.getPublic().delete();
+				ResultPanel.this.deleted = true;
 				Analytics.database.remove(info.getArtist());
 
 				boolean dec = false;
@@ -267,7 +269,7 @@ public class ResultPanel extends JPanel {
 		songField.setSize(songField.getPreferredSize());
 		songLabel.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				if (e.getClickCount() >= 1) {
 					songField.setText(songLabel.getText());
 					songField.selectAll();
@@ -333,7 +335,7 @@ public class ResultPanel extends JPanel {
 		artistField.setSize(artistField.getPreferredSize());
 		artistLabel.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				if (e.getClickCount() >= 1) {
 					artistField.setText(artistLabel.getText());
 					artistField.selectAll();
@@ -401,7 +403,7 @@ public class ResultPanel extends JPanel {
 		youtubeImage.makeButton();
 		youtubeImage.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				try {
 					Desktop.getDesktop().browse(new URI(
 							"https://www.youtube.com/watch?v=" + ResultPanel.this.info.getYoutubeVideo().getVideoId()));
@@ -420,7 +422,7 @@ public class ResultPanel extends JPanel {
 		mp3Image.setToolTipText("Open in file browser");
 		mp3Image.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				try {
 					if (Analytics.isWindows()) {
 						Runtime rt = Runtime.getRuntime();
@@ -442,7 +444,7 @@ public class ResultPanel extends JPanel {
 		 * clipboardImage.setToolTipText("Copy file to clipboard");
 		 * clipboardImage.addMouseListener(new MouseAdapter() {
 		 * 
-		 * @Override public void mouseClicked(MouseEvent e) { File file =
+		 * @Override public void mousePressed(MouseEvent e) { File file =
 		 * ResultPanel.this.info.getPublic(); ResultFileTransferable transfer =
 		 * new ResultFileTransferable(); transfer.addFile(file);
 		 * transfer.setClipboard(); } }); clipboardImage.setCursor(new
@@ -462,7 +464,7 @@ public class ResultPanel extends JPanel {
 		}
 		iTunesImagePanel.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				if (iTunes.iTunesExists(info)) {
 					iTunes.removeFromiTunes(info);
 					iTunesImagePanel.setToolTipText("Add to iTunes");
@@ -859,7 +861,8 @@ public class ResultPanel extends JPanel {
 		if(listener != null) {
 			listener.foreground = true;
 			lyricsEditor.getDocument().removeDocumentListener(listener);
-			listener.updateLyrics();
+			if(!deleted)
+				listener.updateLyrics();
 			listener = null;
 		}
 		albumPanel.setImage((BufferedImage)null);

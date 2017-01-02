@@ -3,6 +3,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.util.List;
 import java.awt.event.ActionEvent;
@@ -101,6 +102,7 @@ public class DownloadGUI extends JFrame {
 		instance = new DownloadGUI();
 		instance.setVisible(true);
 		instance.setStatus("Search for a song");
+		
 		ActionListener searchAction = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

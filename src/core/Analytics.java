@@ -53,7 +53,7 @@ public class Analytics {
 	 * The downloader to use for downloading mp3 files. The default instance is
 	 * YoutubeMP3
 	 */
-	public static YoutubeDownloader downloader = Analytics.isWindows() ? new ManualDownloader() : new YoutubeInMP3();
+	public static YoutubeDownloader downloader = new ManualDownloader();
 	
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("win");

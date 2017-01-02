@@ -529,7 +529,7 @@ public class Client {
 					byteOut = new ByteArrayOutputStream((int) maxBytes);
 				else
 					byteOut = new ByteArrayOutputStream();
-				byte[] buffer = new byte[1024*4];
+				byte[] buffer = new byte[1024*64];
 				int bytesRead;
 				long totalRead = 0;
 				if (dph != null) {

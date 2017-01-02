@@ -116,8 +116,10 @@ public class ManualDownloader extends YoutubeDownloader {
 			String videoURL = getVideoURL(dph, video);
 			if (dph != null)
 				dph.updateStatus("Downloading video " + videoURL);
+			long start = System.currentTimeMillis();
 			Downloader thread = c.readSiteAsync(videoURL, dph);
 			byte[] bs = c.waitForComplete(thread);
+			System.out.println("download time: " + (System.currentTimeMillis()-start)/1000.0);
 			if (dph != null && !dph.isAlive()) {
 				return null;
 			}
@@ -163,10 +165,11 @@ public class ManualDownloader extends YoutubeDownloader {
 
 	}
 
+	static final String FFMPEG = (Analytics.isWindows() ? "ffmpeg.exe" : "ffmpeg_mac");
 	static void convertToMP3(File in, File out) throws IOException {
-		File ffmpeg = new File(Analytics.getPrivateFolder(), "ffmpeg.exe");
+		File ffmpeg = new File(Analytics.getPrivateFolder(), FFMPEG);
 		if (!ffmpeg.exists()) {
-			if(!extractResource("core/resources/ffmpeg.exe", ffmpeg))
+			if(!extractResource("core/resources/" + FFMPEG, ffmpeg))
 				return;
 		}
 		ProcessBuilder pb = new ProcessBuilder(ffmpeg.getAbsolutePath(), "-i", in.getAbsolutePath(), "-b:a", "256k",
