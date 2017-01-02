@@ -319,7 +319,7 @@ public class ItemPanel extends JPanel implements ComponentListener {
 		this.panels.add(centerTop);
 		centerTop.setBackground(new Color(255, 0, 0, 0));
 
-		songLabel = new JLabelSmooth("Song title");
+		songLabel = new JLabel("Song title");
 		songLabel.setFont(TITLE_FONT);
 		songLabel.setPreferredSize(new Dimension(1000, 23));
 		centerTop.add(songLabel, BorderLayout.SOUTH);
@@ -335,10 +335,10 @@ public class ItemPanel extends JPanel implements ComponentListener {
 
 		this.panels.add(bottomRow);
 
-		artistLabel = new JLabelSmooth("The Artist");
+		artistLabel = new JLabel("The Artist");
 		artistLabel.setFont(ARTIST_FONT);
 		// artistLabel.setPreferredSize(new Dimension(1000, 20));
-		this.albumLabel = new JLabelSmooth("Test album");
+		this.albumLabel = new JLabel("Test album");
 		albumLabel.setFont(ALBUM_FONT);
 		albumLabel.setForeground(ALBUM_COLOR);
 		bottomRow.add(artistLabel);
@@ -355,7 +355,7 @@ public class ItemPanel extends JPanel implements ComponentListener {
 		progressBar.setStringPainted(true);
 		// add(progressBar, BorderLayout.CENTER);
 
-		videoLabel = new JLabelSmooth(videoTitle);
+		videoLabel = new JLabel(videoTitle);
 		videoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		videoLabel.setBounds(6, 6, 414, 16);
 
